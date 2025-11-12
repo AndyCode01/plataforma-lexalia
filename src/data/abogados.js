@@ -1,0 +1,141 @@
+export const abogados = [
+  {
+    id: 1,
+    nombre: "Dr. Carlos Mendoza",
+    especialidad: "Derecho Penal",
+    ciudad: "Bogotá",
+    experiencia: 15,
+    rating: 4.9,
+    casosGanados: 245,
+    telefono: "+57 300 123 4567",
+    email: "carlos.mendoza@lexalia.com",
+    foto: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop",
+    descripcion: "Especialista en defensa penal con más de 15 años de experiencia. Reconocido por su ética profesional y tasa de éxito en casos complejos.",
+    idiomas: ["Español", "Inglés"],
+    educacion: "Universidad Nacional de Colombia, Especialización en Derecho Penal"
+  },
+  {
+    id: 2,
+    nombre: "Dra. Ana Rodríguez",
+    especialidad: "Derecho Laboral",
+    ciudad: "Medellín",
+    experiencia: 10,
+    rating: 4.8,
+    casosGanados: 189,
+    telefono: "+57 310 234 5678",
+    email: "ana.rodriguez@lexalia.com",
+    foto: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop",
+    descripcion: "Experta en conflictos laborales, despidos injustificados y negociación colectiva. Defensora de los derechos de los trabajadores.",
+    idiomas: ["Español"],
+    educacion: "Universidad de Antioquia, Maestría en Derecho Laboral"
+  },
+  {
+    id: 3,
+    nombre: "Dr. Juan Ramírez",
+    especialidad: "Derecho Civil",
+    ciudad: "Bogotá",
+    experiencia: 12,
+    rating: 4.7,
+    casosGanados: 312,
+    telefono: "+57 320 345 6789",
+    email: "juan.ramirez@lexalia.com",
+    foto: "https://images.unsplash.com/photo-1556157382-97eda2d62296?w=400&h=400&fit=crop",
+    descripcion: "Especializado en contratos, sucesiones y derecho de familia. Mediador certificado con enfoque en soluciones amistosas.",
+    idiomas: ["Español", "Francés"],
+    educacion: "Universidad Javeriana, Especialización en Derecho Contractual"
+  },
+  {
+    id: 4,
+    nombre: "Dra. María González",
+    especialidad: "Derecho Mercantil",
+    ciudad: "Cali",
+    experiencia: 8,
+    rating: 4.9,
+    casosGanados: 156,
+    telefono: "+57 330 456 7890",
+    email: "maria.gonzalez@lexalia.com",
+    foto: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=400&h=400&fit=crop",
+    descripcion: "Asesora empresas en fusiones, adquisiciones y reestructuraciones. Experta en derecho corporativo y compliance.",
+    idiomas: ["Español", "Inglés", "Portugués"],
+    educacion: "Universidad de los Andes, MBA y Derecho Corporativo"
+  },
+  {
+    id: 5,
+    nombre: "Dr. Pedro Sánchez",
+    especialidad: "Derecho Familiar",
+    ciudad: "Medellín",
+    experiencia: 14,
+    rating: 4.6,
+    casosGanados: 278,
+    telefono: "+57 340 567 8901",
+    email: "pedro.sanchez@lexalia.com",
+    foto: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop",
+    descripcion: "Especialista en divorcios, custodia de menores y pensiones alimenticias. Enfoque humanista y conciliador.",
+    idiomas: ["Español"],
+    educacion: "Universidad Pontificia Bolivariana, Especialización en Familia"
+  },
+  {
+    id: 6,
+    nombre: "Dra. Laura Martínez",
+    especialidad: "Derecho Administrativo",
+    ciudad: "Bogotá",
+    experiencia: 11,
+    rating: 4.8,
+    casosGanados: 201,
+    telefono: "+57 350 678 9012",
+    email: "laura.martinez@lexalia.com",
+    foto: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop",
+    descripcion: "Experta en contratación estatal, procesos administrativos y tutelas. Representación ante entidades públicas.",
+    idiomas: ["Español", "Inglés"],
+    educacion: "Universidad Externado de Colombia, Maestría en Derecho Público"
+  },
+  {
+    id: 7,
+    nombre: "Dr. Roberto Díaz",
+    especialidad: "Derecho Penal",
+    ciudad: "Cali",
+    experiencia: 9,
+    rating: 4.7,
+    casosGanados: 167,
+    telefono: "+57 360 789 0123",
+    email: "roberto.diaz@lexalia.com",
+    foto: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
+    descripcion: "Defensor penal especializado en delitos económicos y crimen organizado. Estratega legal reconocido.",
+    idiomas: ["Español", "Inglés"],
+    educacion: "Universidad del Valle, Especialización en Derecho Penal Económico"
+  },
+  {
+    id: 8,
+    nombre: "Dra. Sofía Torres",
+    especialidad: "Derecho Laboral",
+    ciudad: "Bogotá",
+    experiencia: 7,
+    rating: 4.9,
+    casosGanados: 134,
+    telefono: "+57 370 890 1234",
+    email: "sofia.torres@lexalia.com",
+    foto: "https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?w=400&h=400&fit=crop",
+    descripcion: "Joven abogada especializada en acoso laboral, discriminación y seguridad social. Comprometida con la justicia.",
+    idiomas: ["Español", "Inglés"],
+    educacion: "Universidad del Rosario, Especialización en Derecho Laboral"
+  }
+];
+
+export const especialidades = [
+  "Todas",
+  "Derecho Penal",
+  "Derecho Laboral",
+  "Derecho Civil",
+  "Derecho Mercantil",
+  "Derecho Familiar",
+  "Derecho Administrativo"
+];
+
+export const ciudades = [
+  "Todas",
+  "Bogotá",
+  "Medellín",
+  "Cali",
+  "Barranquilla",
+  "Cartagena"
+];
