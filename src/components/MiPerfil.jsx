@@ -97,6 +97,9 @@ export default function MiPerfil() {
 
   if (!user) return null;
 
+  const isUsuario = user.rol === 'usuario';
+  const isAbogado = user.rol === 'abogado';
+
   return (
     <section className="py-12 bg-gray-50 min-h-screen">
       <div className="container mx-auto px-4 max-w-3xl">
@@ -109,10 +112,20 @@ export default function MiPerfil() {
                   👑 Administrador
                 </span>
               )}
+              {isUsuario && (
+                <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold mr-2">
+                  👤 Usuario
+                </span>
+              )}
+              {isAbogado && (
+                <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 font-semibold mr-2">
+                  ⚖️ Abogado
+                </span>
+              )}
               <span className={`px-3 py-1 rounded-full ${user.activo ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
                 {user.activo ? '✓ Activo' : 'Inactivo'}
               </span>
-              {user.plan && !isAdmin() && <span className="ml-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full capitalize">{user.plan}</span>}
+              {user.plan && !isAdmin() && !isUsuario && <span className="ml-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full capitalize">{user.plan}</span>}
             </div>
           </div>
 
@@ -126,7 +139,7 @@ export default function MiPerfil() {
             <p className="text-sm text-gray-600">
               <strong>Rol:</strong> <span className="capitalize">{user.rol}</span>
             </p>
-            {user.fecha_expiracion && !isAdmin() && (
+            {user.fecha_expiracion && !isAdmin() && !isUsuario && (
               <p className="text-sm text-gray-600">
                 <strong>Membresía vigente hasta:</strong> {new Date(user.fecha_expiracion).toLocaleDateString()}
               </p>
@@ -152,8 +165,72 @@ export default function MiPerfil() {
                 Ir al Panel de Administración
               </a>
             </div>
+          ) : isUsuario ? (
+            // Vista para usuarios (solo foto y acceso a consultas)
+            <>
+              {message.text && (
+                <div className={`mb-4 p-3 rounded ${message.type === 'success' ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-600'}`}>
+                  {message.text}
+                </div>
+              )}
+
+              <div className="text-center py-8">
+                <div className="mb-6">
+                  <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-200 mx-auto mb-4">
+                    {fotoPreview ? (
+                      <img src={fotoPreview} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-4xl">
+                        👤
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFotoChange}
+                    className="text-sm mx-auto"
+                  />
+                  <p className="text-xs text-gray-500 mt-2">Máximo 2MB, formatos: JPG, PNG</p>
+                </div>
+
+                {fotoFile && (
+                  <button
+                    onClick={async () => {
+                      setLoading(true);
+                      try {
+                        const up = await apiUpload('/api/upload', fotoFile, { headers: { Authorization: `Bearer ${token}` } });
+                        setMessage({ type: 'success', text: '✓ Foto actualizada exitosamente' });
+                        setFotoPreview(up.url);
+                      } catch (err) {
+                        setMessage({ type: 'error', text: err.message || 'Error al subir la foto' });
+                      } finally {
+                        setLoading(false);
+                      }
+                    }}
+                    disabled={loading}
+                    className="mb-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                  >
+                    {loading ? 'Subiendo...' : 'Guardar foto'}
+                  </button>
+                )}
+
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-lg">
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">¿Necesitas asesoría legal?</h3>
+                  <p className="text-gray-600 mb-4">
+                    Publica tu consulta y nuestros abogados te responderán
+                  </p>
+                  <a
+                    href="/consultas"
+                    className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-medium"
+                  >
+                    💬 Ir a Consultas
+                  </a>
+                </div>
+              </div>
+            </>
           ) : (
-            // Vista para abogados (formulario de perfil)
+            // Vista para abogados (formulario de perfil completo)
             <>
               {message.text && (
                 <div className={`mb-4 p-3 rounded ${message.type === 'success' ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-600'}`}>

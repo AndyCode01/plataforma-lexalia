@@ -7,6 +7,7 @@ import RegistroAbogado from './components/RegistroAbogado'
 import Login from './components/Login'
 import MiPerfil from './components/MiPerfil'
 import PanelAdmin from './components/PanelAdmin'
+import Consultas from './components/Consultas'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
 import Footer from './components/Footer'
@@ -34,6 +35,11 @@ function App() {
         <Route path="/mi-perfil" element={
           <ProtectedRoute>
             <MiPerfil />
+          </ProtectedRoute>
+        } />
+        <Route path="/consultas" element={
+          <ProtectedRoute>
+            <Consultas />
           </ProtectedRoute>
         } />
         <Route path="/admin" element={

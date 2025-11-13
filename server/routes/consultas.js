@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
-import { requireAuth } from '../middleware/auth.js';
+import { authRequired, requireRole } from '../middleware/auth.js';
 import { crearConsulta, listarConsultas, responderConsulta } from '../controllers/consultaController.js';
 
 const router = Router();
 
 // Crear consulta (solo usuarios)
 router.post('/',
-  requireAuth,
+  authRequired,
   [
     body('titulo').notEmpty().withMessage('El título es requerido'),
     body('descripcion').notEmpty().withMessage('La descripción es requerida'),
@@ -17,11 +17,12 @@ router.post('/',
 );
 
 // Listar consultas
-router.get('/', requireAuth, listarConsultas);
+router.get('/', authRequired, listarConsultas);
 
 // Responder consulta (solo abogados)
 router.post('/:consultaId/responder',
-  requireAuth,
+  authRequired,
+  requireRole('abogado', 'admin'),
   [
     body('contenido').notEmpty().withMessage('El contenido de la respuesta es requerido')
   ],
