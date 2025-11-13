@@ -7,6 +7,7 @@ export default function PanelAdmin() {
   const [activeTab, setActiveTab] = useState('usuarios');
   const [usuarios, setUsuarios] = useState([]);
   const [abogados, setAbogados] = useState([]);
+  const [consultas, setConsultas] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [editando, setEditando] = useState(null);
@@ -23,9 +24,12 @@ export default function PanelAdmin() {
       if (activeTab === 'usuarios') {
         const data = await apiGet('/api/admin/usuarios', withAuth(token));
         setUsuarios(data);
-      } else {
+      } else if (activeTab === 'abogados') {
         const data = await apiGet('/api/admin/abogados', withAuth(token));
         setAbogados(data);
+      } else if (activeTab === 'consultas') {
+        const data = await apiGet('/api/consultas', withAuth(token));
+        setConsultas(data);
       }
     } catch (err) {
       setError(err.message || 'Error al cargar datos');
@@ -118,6 +122,16 @@ export default function PanelAdmin() {
             >
               Abogados ({abogados.length})
             </button>
+            <button
+              onClick={() => setActiveTab('consultas')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'consultas'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Consultas ({consultas.length})
+            </button>
           </nav>
         </div>
 
@@ -157,6 +171,9 @@ export default function PanelAdmin() {
                 onCancel={handleCancelEdit}
                 onChange={handleInputChange}
               />
+            )}
+            {activeTab === 'consultas' && (
+              <TablaConsultas consultas={consultas} />
             )}
           </>
         )}
@@ -420,6 +437,67 @@ function TablaAbogados({ abogados, editando, formData, onEdit, onDelete, onSave,
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function TablaConsultas({ consultas }) {
+  const formatearFecha = (fecha) => {
+    const date = new Date(fecha);
+    return date.toLocaleDateString('es-ES', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      {consultas.map(consulta => (
+        <div key={consulta.id} className="bg-white shadow-md rounded-lg p-6">
+          <div className="flex justify-between items-start mb-3">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">{consulta.titulo}</h3>
+              <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
+                <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded capitalize">{consulta.categoria}</span>
+                <span>Por: {consulta.usuario?.nombre}</span>
+                <span>{formatearFecha(consulta.created_at)}</span>
+              </div>
+            </div>
+            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+              consulta.estado === 'abierta' ? 'bg-yellow-100 text-yellow-800' :
+              consulta.estado === 'respondida' ? 'bg-green-100 text-green-800' :
+              'bg-gray-100 text-gray-800'
+            }`}>
+              {consulta.estado}
+            </span>
+          </div>
+          
+          <p className="text-gray-700 mb-4 whitespace-pre-line">{consulta.descripcion}</p>
+          
+          {consulta.respuestas && consulta.respuestas.length > 0 && (
+            <div className="border-t pt-4 mt-4">
+              <h4 className="font-semibold text-gray-700 mb-2">
+                Respuestas ({consulta.respuestas.length}):
+              </h4>
+              <div className="space-y-2">
+                {consulta.respuestas.map(resp => (
+                  <div key={resp.id} className="bg-green-50 p-3 rounded border border-green-100">
+                    <div className="flex items-center gap-2 mb-1 text-xs text-gray-600">
+                      <span className="font-semibold text-green-700">⚖️ {resp.abogado?.nombre}</span>
+                      <span>•</span>
+                      <span>{formatearFecha(resp.created_at)}</span>
+                    </div>
+                    <p className="text-sm text-gray-700">{resp.contenido}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }

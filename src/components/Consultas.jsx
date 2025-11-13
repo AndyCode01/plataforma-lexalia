@@ -198,6 +198,7 @@ export default function Consultas() {
 }
 
 function ConsultaCard({ consulta, isAbogado, onResponder }) {
+  const { user } = useAuth();
   const [showRespuesta, setShowRespuesta] = useState(false);
   const [respuesta, setRespuesta] = useState('');
 
@@ -229,9 +230,9 @@ function ConsultaCard({ consulta, isAbogado, onResponder }) {
               {consulta.categoria}
             </span>
             <span>•</span>
-            <span>Por {consulta.usuario?.nombre}</span>
+            <span>Por {consulta.usuario?.nombre ?? '—'}</span>
             <span>•</span>
-            <span>{formatearFecha(consulta.createdAt)}</span>
+            <span>{formatearFecha(consulta.created_at)}</span>
           </div>
         </div>
       </div>
@@ -243,12 +244,12 @@ function ConsultaCard({ consulta, isAbogado, onResponder }) {
           <h4 className="font-semibold text-gray-700">
             Respuestas ({consulta.respuestas.length}):
           </h4>
-          {consulta.respuestas.map(resp => (
+          {[...consulta.respuestas].sort((a, b) => new Date(a.created_at) - new Date(b.created_at)).map(resp => (
             <div key={resp.id} className="bg-green-50 p-4 rounded-lg border border-green-100">
               <div className="flex items-center gap-2 mb-2 text-sm text-gray-600">
-                <span className="font-semibold text-green-700">⚖️ {resp.abogado?.usuario?.nombre}</span>
+                <span className="font-semibold text-green-700">⚖️ {resp.abogado?.nombre}</span>
                 <span>•</span>
-                <span>{formatearFecha(resp.createdAt)}</span>
+                <span>{formatearFecha(resp.created_at)}</span>
               </div>
               <p className="text-gray-700 whitespace-pre-line">{resp.contenido}</p>
             </div>
@@ -256,7 +257,7 @@ function ConsultaCard({ consulta, isAbogado, onResponder }) {
         </div>
       )}
 
-      {isAbogado && (
+      {(isAbogado || (consulta.usuario_id && consulta.usuario_id === (user?.id))) && (
         <div className="mt-4 border-t pt-4">
           {!showRespuesta ? (
             <button
@@ -271,14 +272,14 @@ function ConsultaCard({ consulta, isAbogado, onResponder }) {
           ) : (
             <div className="space-y-2 bg-blue-50 p-4 rounded-lg">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tu respuesta profesional:
+                {(isAbogado ? 'Tu respuesta profesional:' : 'Tu respuesta:')}
               </label>
               <textarea
                 value={respuesta}
                 onChange={(e) => setRespuesta(e.target.value)}
                 rows="4"
                 className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Comparte tu conocimiento legal para ayudar al usuario..."
+                placeholder={isAbogado ? 'Comparte tu conocimiento legal para ayudar al usuario...' : 'Agrega más detalles o seguimiento a tu consulta...'}
               ></textarea>
               <div className="flex gap-2">
                 <button
@@ -286,7 +287,7 @@ function ConsultaCard({ consulta, isAbogado, onResponder }) {
                   disabled={!respuesta.trim()}
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Enviar Respuesta
+                  {isAbogado ? 'Enviar Respuesta' : 'Agregar comentario'}
                 </button>
                 <button
                   onClick={() => {

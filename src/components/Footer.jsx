@@ -43,9 +43,19 @@ const Footer = () => {
           <div>
             <h4 className="text-lg font-semibold mb-4">Contacto</h4>
             <ul className="space-y-2 text-gray-400">
-              <li>📧 info@plataforma-legal.com</li>
-              <li>📱 +1 (555) 123-4567</li>
-              <li>📍 Ciudad, País</li>
+              <li>
+                📧
+                <a href="mailto:lexalia@gmail.com" className="hover:text-blue-400 transition ml-2">
+                  lexalia@gmail.com
+                </a>
+              </li>
+              <li>
+                📱
+                <a href="tel:+576016871962" className="hover:text-blue-400 transition ml-2">
+                  +57 601 687 1962
+                </a>
+              </li>
+              <li>📍 Bogotá, Colombia</li>
             </ul>
           </div>
         </div>

@@ -19,10 +19,9 @@ router.post('/',
 // Listar consultas
 router.get('/', authRequired, listarConsultas);
 
-// Responder consulta (solo abogados)
+// Responder consulta (abogados a cualquier consulta; usuarios solo a las suyas)
 router.post('/:consultaId/responder',
   authRequired,
-  requireRole('abogado', 'admin'),
   [
     body('contenido').notEmpty().withMessage('El contenido de la respuesta es requerido')
   ],

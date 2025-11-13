@@ -1,22 +1,40 @@
-import { Op } from 'sequelize';
+import { Op, col, where as sqWhere } from 'sequelize';
 import { Abogado } from '../models/Abogado.js';
 import { Usuario } from '../models/Usuario.js';
 
 export const listar = async (req, res) => {
   try {
     const { ciudad, especialidad, q } = req.query;
-    const where = {};
-    if (ciudad && ciudad !== 'Todas') where.ciudad = ciudad;
-    if (especialidad && especialidad !== 'Todas') where.especialidad = especialidad;
-    if (q) where.descripcion = { [Op.like]: `%${q}%` };
+    const baseWhere = {};
+    if (ciudad && ciudad !== 'Todas') baseWhere.ciudad = ciudad;
+    if (especialidad && especialidad !== 'Todas') baseWhere.especialidad = especialidad;
+
+    let finalWhere = baseWhere;
+    if (q && q.trim()) {
+      const term = `%${q.trim()}%`;
+      finalWhere = {
+        ...baseWhere,
+        [Op.or]: [
+          { descripcion: { [Op.like]: term } },
+          { especialidad: { [Op.like]: term } },
+          { ciudad: { [Op.like]: term } },
+          { email_publico: { [Op.like]: term } },
+          { telefono: { [Op.like]: term } },
+          { educacion: { [Op.like]: term } },
+          // Campos del usuario relacionado (nombre y email)
+          sqWhere(col('usuario.nombre'), { [Op.like]: term }),
+          sqWhere(col('usuario.email'), { [Op.like]: term })
+        ]
+      };
+    }
 
     const rows = await Abogado.findAll({
-      where,
-      include: [{ model: Usuario, as: 'usuario', attributes: ['id', 'nombre'] }],
+      where: finalWhere,
+      include: [{ model: Usuario, as: 'usuario', attributes: ['id', 'nombre', 'email'], required: false }],
       order: [['rating', 'DESC']]
     });
 
-    const data = rows.map((r) => ({
+    let data = rows.map((r) => ({
       id: r.id,
       nombre: r.usuario?.nombre,
       especialidad: r.especialidad,
@@ -31,6 +49,20 @@ export const listar = async (req, res) => {
       idiomas: r.idiomas?.split(',').filter(Boolean) || [],
       educacion: r.educacion
     }));
+
+    // Filtro final en memoria (defensa extra) para coincidencias por nombre/email
+    if (q && q.trim()) {
+      const term = q.trim().toLowerCase();
+      data = data.filter((a) =>
+        (a.nombre || '').toLowerCase().includes(term) ||
+        (a.especialidad || '').toLowerCase().includes(term) ||
+        (a.ciudad || '').toLowerCase().includes(term) ||
+        (a.descripcion || '').toLowerCase().includes(term) ||
+        (a.email || '').toLowerCase().includes(term) ||
+        (a.telefono || '').toLowerCase().includes(term) ||
+        (a.educacion || '').toLowerCase().includes(term)
+      );
+    }
 
     return res.json(data);
   } catch (err) {
