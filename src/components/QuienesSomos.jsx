@@ -31,26 +31,50 @@ const QuienesSomos = () => {
           {/* Text Content */}
           <div>
             <h3 className="text-2xl font-bold text-slate-900 mb-4">
-              La Plataforma que Impulsa tu Carrera Legal
+              Impulsamos talento joven, acercamos la justicia
             </h3>
-            <p className="text-gray-700 mb-6 leading-relaxed">
-              Somos una plataforma innovadora dedicada a conectar abogados profesionales 
-              con oportunidades únicas de crecimiento. Nuestra misión es facilitar el acceso 
-              a recursos, clientes y una red de profesionales del derecho.
-            </p>
-            <p className="text-gray-700 mb-6 leading-relaxed">
-              Con más de 10 años de experiencia en el sector legal, hemos ayudado a miles 
-              de abogados a expandir su práctica y mejorar sus servicios a través de 
-              herramientas tecnológicas de vanguardia.
-            </p>
-            <div className="grid grid-cols-2 gap-4 mt-8">
-              <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <h4 className="text-3xl font-bold text-blue-600">5000+</h4>
-                <p className="text-gray-600">Abogados Registrados</p>
+            <div className="space-y-4 text-gray-700 leading-relaxed">
+              <p>
+                En <span className="font-semibold">LEXALIA</span> creemos en el poder del talento joven y en la importancia de hacer el
+                derecho más accesible para todos. Somos una plataforma digital que conecta a personas
+                que buscan asesoría legal con abogados jóvenes y comprometidos, dispuestos a brindar soluciones
+                claras, éticas y humanas.
+              </p>
+              <p>
+                Nacimos con un propósito: dar visibilidad a las nuevas generaciones de profesionales del derecho y,
+                al mismo tiempo, acercar la asesoría jurídica a quienes la necesitan de forma sencilla, confiable y
+                transparente.
+              </p>
+              <p>
+                Nuestro compromiso es construir una comunidad donde el conocimiento se comparta, la justicia se acerque a las personas
+                y los abogados encuentren un espacio para crecer profesionalmente, inspirar confianza y transformar la práctica del
+                derecho desde una mirada moderna y solidaria.
+              </p>
+            </div>
+
+            {/* Misión y Visión */}
+            <div className="grid sm:grid-cols-2 gap-4 mt-8">
+              <div className="p-5 rounded-xl border border-blue-100 bg-gradient-to-br from-white to-blue-50/50 shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-700">🎯</span>
+                  <h4 className="text-lg font-semibold text-slate-900">Misión</h4>
+                </div>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  Facilitar el acceso a servicios legales confiables conectando a personas con abogados jóvenes, talentosos y
+                  comprometidos. A través de una plataforma digital accesible y moderna, impulsamos el crecimiento profesional
+                  de los nuevos abogados mientras acercamos soluciones jurídicas claras, éticas y al alcance de todos.
+                </p>
               </div>
-              <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <h4 className="text-3xl font-bold text-blue-600">15000+</h4>
-                <p className="text-gray-600">Casos Resueltos</p>
+              <div className="p-5 rounded-xl border border-indigo-100 bg-gradient-to-br from-white to-indigo-50/50 shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700">🚀</span>
+                  <h4 className="text-lg font-semibold text-slate-900">Visión</h4>
+                </div>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  Ser la plataforma líder en Latinoamérica que transforma la manera de acceder a la asesoría legal, destacando el
+                  talento de las nuevas generaciones de abogados y promoviendo una cultura jurídica más humana, transparente y
+                  accesible para todos.
+                </p>
               </div>
             </div>
           </div>

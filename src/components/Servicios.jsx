@@ -13,7 +13,10 @@ const Servicios = () => {
   ];
 
   return (
-    <section id="servicios" className="py-20 bg-gray-50">
+    <section id="servicios" className="py-20 bg-gradient-to-br from-gray-50 via-white to-blue-50/40 relative overflow-hidden">
+      {/* decor */}
+      <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-blue-200/30 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-indigo-200/30 blur-3xl" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-slate-900 mb-4">
@@ -25,32 +28,43 @@ const Servicios = () => {
           </p>
         </div>
 
-  <div className="grid grid-cols-1 gap-8 max-w-xl mx-auto">
+        <div className="grid grid-cols-1 gap-8 max-w-2xl mx-auto">
           {servicios.map((servicio, index) => (
-            <div 
+            <div
               key={index}
-              className="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border-l-4 border-blue-600 flex flex-col items-center text-center"
+              className="relative bg-white p-10 rounded-2xl shadow-xl ring-1 ring-blue-100/70 hover:shadow-2xl transition-all duration-300 flex flex-col items-center text-center"
             >
-              <div className="mb-6 p-4 bg-blue-50 rounded-full">
-                {servicio.icon}
+              <div className="absolute -top-8">
+                <div className="mx-auto mb-2 p-4 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-2xl shadow-lg">
+                  {servicio.icon}
+                </div>
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">
-                {servicio.titulo}
-              </h3>
-              <p className="text-gray-600 leading-relaxed">
-                {servicio.descripcion}
-              </p>
+              <div className="pt-6">
+                <span className="inline-block mb-2 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-700 bg-blue-50 rounded-full">
+                  Servicio destacado
+                </span>
+                <h3 className="text-2xl font-extrabold text-slate-900 mb-3">
+                  {servicio.titulo}
+                </h3>
+                <p className="text-gray-600 leading-relaxed max-w-xl mx-auto">
+                  {servicio.descripcion}
+                </p>
+                <div className="mt-6 flex flex-wrap justify-center gap-2 text-sm">
+                  <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full">Orientación clara</span>
+                  <span className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full">Respuesta oportuna</span>
+                  <span className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full">Acompañamiento humano</span>
+                </div>
+                <div className="mt-8">
+                  <a
+                    href="/consultas"
+                    className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg text-lg transition transform hover:scale-[1.02]"
+                  >
+                    Publicar mi consulta
+                  </a>
+                </div>
+              </div>
             </div>
           ))}
-        </div>
-
-        <div className="mt-16 text-center">
-          <a 
-            href="#registro" 
-            className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition transform hover:scale-105"
-          >
-            Comienza a Disfrutar de Estos Beneficios
-          </a>
         </div>
       </div>
     </section>
