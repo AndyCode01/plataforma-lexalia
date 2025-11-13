@@ -1,0 +1,38 @@
+# Dependencias
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Variables de entorno
+.env
+.env.local
+.env.development
+.env.production
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Uploads (imágenes subidas por usuarios - opcional, depende si quieres persistirlas)
+uploads/*
+!uploads/.gitkeep
+
+# Documentación y guías (excluir del deploy)
+*.md
+DEPLOY_HOSTINGER.md
+GUIA_DEPLOYMENT.md
+PASOS_HOSTINGER.md
+README.md
+
+# Archivos de configuración de Hostinger (no necesarios en Railway)
+.htaccess
+
+# Archivos temporales
+*.tmp
+*.bak
+*.swp
