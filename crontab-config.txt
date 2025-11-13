@@ -1,0 +1,4 @@
+# Configuración de cron para despliegue automático
+# Ejecuta el script cada 5 minutos para verificar cambios
+
+*/5 * * * * /bin/bash /root/plataforma-lexalia/deploy.sh >> /root/plataforma-lexalia/deploy.log 2>&1

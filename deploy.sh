@@ -2,38 +2,38 @@
 # Script de despliegue automático para VPS
 # Ubicación en VPS: /root/plataforma-lexalia/deploy.sh
 
-set -e  # Detener si hay errores
-
-echo "🚀 Iniciando despliegue..."
-
-# Ir al directorio del proyecto
 cd /root/plataforma-lexalia
 
-# Descargar últimos cambios
-echo "📥 Descargando cambios de GitHub..."
+# Verificar si hay cambios
+git fetch origin main
+
+LOCAL=$(git rev-parse HEAD)
+REMOTE=$(git rev-parse origin/main)
+
+if [ $LOCAL = $REMOTE ]; then
+    echo "$(date) - No hay cambios nuevos"
+    exit 0
+fi
+
+echo "$(date) - � Cambios detectados, desplegando..."
+
+# Descargar cambios
 git pull origin main
 
-# Instalar dependencias del backend
-echo "📦 Instalando dependencias del backend..."
+# Backend
 cd server
 npm install --production
 
-# Volver a raíz y construir frontend
-echo "🏗️  Construyendo frontend..."
+# Frontend
 cd ..
 npm install
 npm run build
 
-# Copiar build a Nginx
-echo "📋 Copiando archivos al servidor web..."
+# Copiar a Nginx
 rm -rf /var/www/html/*
 cp -r dist/* /var/www/html/
 
-# Reiniciar backend con PM2
-echo "🔄 Reiniciando backend..."
+# Reiniciar backend
 pm2 restart lexalia-api
 
-# Mostrar logs
-echo "✅ Despliegue completado!"
-echo "📊 Logs del backend:"
-pm2 logs lexalia-api --lines 10 --nostream
+echo "$(date) - ✅ Despliegue completado"
