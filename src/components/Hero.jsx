@@ -7,21 +7,15 @@ const Hero = () => {
       {/* Content */}
       <div className="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6">
-          Únete a la Plataforma Legal Más Grande
+          Únete a la Red de Colaboración Legal Más Grande
         </h1>
         <p className="text-xl sm:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto">
           Conecta con clientes, accede a recursos exclusivos y potencia tu práctica legal
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <a 
-            href="#registro" 
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition transform hover:scale-105"
-          >
-            Registrarse Ahora
-          </a>
+        <div className="flex justify-center">
           <a 
             href="#servicios" 
-            className="bg-transparent border-2 border-white hover:bg-white hover:text-slate-900 text-white font-bold py-3 px-8 rounded-lg text-lg transition"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition transform hover:scale-105"
           >
             Ver Beneficios
           </a>
