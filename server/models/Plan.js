@@ -7,7 +7,7 @@ export class Plan extends Model {}
 Plan.init({
   id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
   abogado_id: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
-  tipo: { type: DataTypes.ENUM('basico', 'pro', 'premium'), allowNull: false, defaultValue: 'basico' },
+  tipo: { type: DataTypes.ENUM('basico', 'pro', 'premium'), allowNull: false, defaultValue: 'premium' },
   fecha_inicio: { type: DataTypes.DATEONLY, allowNull: false },
   fecha_fin: { type: DataTypes.DATEONLY, allowNull: true },
   estado: { type: DataTypes.ENUM('activo', 'suspendido', 'vencido'), allowNull: false, defaultValue: 'activo' },

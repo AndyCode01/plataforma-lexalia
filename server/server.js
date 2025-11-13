@@ -6,12 +6,15 @@ import abogadosRoutes from './routes/abogados.js';
 import mercadoPagoRoutes from './routes/mercadopago.js';
 import uploadRoutes from './routes/upload.js';
 import adminRoutes from './routes/admin.js';
+import consultasRoutes from './routes/consultas.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { connectDB, sequelize } from './config/database.js';
 import { Usuario } from './models/Usuario.js';
 import { Abogado } from './models/Abogado.js';
 import { Plan } from './models/Plan.js';
+import { Consulta } from './models/Consulta.js';
+import { Respuesta } from './models/Respuesta.js';
 
 const app = express();
 const allowedOrigin = process.env.CORS_ORIGIN || '*';
@@ -24,11 +27,22 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Definir relaciones
+Usuario.hasMany(Consulta, { foreignKey: 'usuario_id', as: 'consultas' });
+Consulta.belongsTo(Usuario, { foreignKey: 'usuario_id', as: 'usuario' });
+
+Consulta.hasMany(Respuesta, { foreignKey: 'consulta_id', as: 'respuestas' });
+Respuesta.belongsTo(Consulta, { foreignKey: 'consulta_id', as: 'consulta' });
+
+Usuario.hasMany(Respuesta, { foreignKey: 'abogado_id', as: 'respuestas' });
+Respuesta.belongsTo(Usuario, { foreignKey: 'abogado_id', as: 'abogado' });
+
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/abogados', abogadosRoutes);
 app.use('/api/mercadopago', mercadoPagoRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/consultas', consultasRoutes);
 console.log('🔧 Montando rutas de admin en /api/admin...');
 app.use('/api/admin', adminRoutes);
 console.log('✅ Todas las rutas montadas');

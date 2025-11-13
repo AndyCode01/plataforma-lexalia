@@ -14,7 +14,7 @@ export const register = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { nombre, email, password, rol = 'abogado', perfil } = req.body;
+    const { nombre, email, password, rol = 'usuario', perfil } = req.body;
     console.log('📝 Intentando registrar:', { nombre, email, rol });
     const exists = await Usuario.findOne({ where: { email } });
     if (exists) {
@@ -23,7 +23,18 @@ export const register = async (req, res) => {
     }
 
     const password_hash = await bcrypt.hash(password, 10);
-    const user = await Usuario.create({ nombre, email, password_hash, rol });
+    
+    // Si es usuario normal, activar automáticamente
+    const userData = {
+      nombre,
+      email,
+      password_hash,
+      rol,
+      activo: rol === 'usuario' ? true : false,
+      estado_pago: rol === 'usuario' ? 'aprobado' : 'pendiente'
+    };
+    
+    const user = await Usuario.create(userData);
 
     if (rol === 'abogado') {
       const defaultPerfil = {

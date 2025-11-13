@@ -4,13 +4,12 @@ import { Link } from 'react-router-dom';
 import { apiPost } from '../services/api';
 
 const planes = [
-  { value: 'basico', label: 'Básico', precio: 60000 },
-  { value: 'pro', label: 'Pro', precio: 120000 },
-  { value: 'premium', label: 'Premium', precio: 180000 },
+  { value: 'premium', label: 'Premium', precio: 100000 },
 ];
 
 export default function RegistroAbogado() {
-  const [form, setForm] = useState({ nombre: '', email: '', password: '', plan: 'basico' });
+  const [tipoRegistro, setTipoRegistro] = useState('usuario'); // 'usuario' o 'abogado'
+  const [form, setForm] = useState({ nombre: '', email: '', password: '', plan: 'premium' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [errores, setErrores] = useState([]);
@@ -29,23 +28,31 @@ export default function RegistroAbogado() {
     setPagoUrl(null);
     setErrores([]);
     try {
-      // Registrar usuario provisional
+      // Registrar según el tipo seleccionado
       const res = await apiPost('/api/auth/register', {
         nombre: form.nombre,
         email: form.email,
         password: form.password,
-        rol: 'abogado',
-        perfil: {},
-        plan: form.plan,
+        rol: tipoRegistro, // 'usuario' o 'abogado'
+        perfil: tipoRegistro === 'abogado' ? {} : undefined,
+        plan: tipoRegistro === 'abogado' ? form.plan : undefined,
       });
       setUsuarioId(res.userId);
       
-      // MODO DESARROLLO: simular pago directo (comentar cuando tengas MercadoPago funcionando)
+      // Si es usuario, activar automáticamente sin pago
+      if (tipoRegistro === 'usuario') {
+        setPagoUrl('USUARIO_ACTIVADO');
+        setError(null);
+        setErrores([]);
+        setLoading(false);
+        return;
+      }
+      
+      // Si es abogado, simular pago
       const pagoRes = await apiPost('/api/mercadopago/simular-pago', {
         usuarioId: res.userId,
         plan: form.plan,
       });
-      // Marcar como completado sin redirigir a MP
       setPagoUrl('SIMULADO');
       setError(null);
       setErrores([]);
@@ -74,7 +81,7 @@ export default function RegistroAbogado() {
   return (
     <section className="py-20 min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-blue-300 animate-fadein">
       <div className="max-w-md w-full bg-white/90 p-8 rounded-2xl shadow-2xl border border-blue-100 backdrop-blur-md">
-  <h2 className="text-3xl font-extrabold mb-8 text-center text-blue-700 drop-shadow">Registro de Abogado</h2>
+  <h2 className="text-3xl font-extrabold mb-8 text-center text-blue-700 drop-shadow">Registro</h2>
         {error && <div className="mb-4 text-red-600 bg-red-100 border border-red-200 rounded px-3 py-2 animate-shake">{error}</div>}
         {errores.length > 0 && (
           <ul className="mb-4 text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 animate-shake">
@@ -83,6 +90,40 @@ export default function RegistroAbogado() {
         )}
         {!pagoUrl ? (
           <form onSubmit={handleSubmit} className="space-y-5 animate-fadein-slow">
+            {/* Selector de tipo de registro */}
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <label className="block text-sm font-medium mb-3 text-blue-800">¿Cómo deseas registrarte?</label>
+              <div className="space-y-3">
+                <label className="flex items-center cursor-pointer p-3 bg-white rounded-lg border-2 border-blue-200 hover:border-blue-400 transition-all">
+                  <input 
+                    type="radio" 
+                    name="tipoRegistro" 
+                    value="usuario" 
+                    checked={tipoRegistro === 'usuario'}
+                    onChange={(e) => setTipoRegistro(e.target.value)}
+                    className="mr-3"
+                  />
+                  <div>
+                    <div className="font-semibold text-blue-700">Usuario (Gratis)</div>
+                    <div className="text-sm text-gray-600">Publica consultas legales</div>
+                  </div>
+                </label>
+                <label className="flex items-center cursor-pointer p-3 bg-white rounded-lg border-2 border-blue-200 hover:border-blue-400 transition-all">
+                  <input 
+                    type="radio" 
+                    name="tipoRegistro" 
+                    value="abogado" 
+                    checked={tipoRegistro === 'abogado'}
+                    onChange={(e) => setTipoRegistro(e.target.value)}
+                    className="mr-3"
+                  />
+                  <div>
+                    <div className="font-semibold text-blue-700">Abogado ($100,000)</div>
+                    <div className="text-sm text-gray-600">Acceso al panel profesional</div>
+                  </div>
+                </label>
+              </div>
+            </div>
             <div className="relative">
               <label className="block text-sm font-medium mb-1">Nombre completo</label>
               <span className="absolute left-3 top-9 text-blue-400"><FaUser /></span>
@@ -101,29 +142,35 @@ export default function RegistroAbogado() {
               <input name="password" type="password" value={form.password} onChange={handleChange} required
                 className="w-full pl-10 pr-3 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200 shadow-sm bg-white/80" />
             </div>
-            <div className="relative">
-              <label className="block text-sm font-medium mb-1">Plan</label>
-              <span className="absolute left-3 top-9 text-blue-400"><FaRegCreditCard /></span>
-              <select name="plan" value={form.plan} onChange={handleChange}
-                className="w-full pl-10 pr-3 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200 shadow-sm bg-white/80">
-                {planes.map(p => <option key={p.value} value={p.value}>{p.label} - ${p.precio}</option>)}
-              </select>
-            </div>
+            {tipoRegistro === 'abogado' && (
+              <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 text-center">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <FaRegCreditCard className="text-blue-600 text-xl" />
+                  <h3 className="text-lg font-bold text-blue-700">Plan Premium</h3>
+                </div>
+                <p className="text-3xl font-extrabold text-blue-600 mb-1">$100,000 COP</p>
+                <p className="text-sm text-gray-600">Membresía única para abogados</p>
+              </div>
+            )}
             <button type="submit" disabled={loading}
               className="w-full py-2 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-lg font-semibold shadow-md hover:from-blue-700 hover:to-blue-500 transition-all duration-200 flex items-center justify-center gap-2">
               {loading && <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>}
-              {loading ? 'Procesando...' : 'Registrar y pagar'}
+              {loading ? 'Procesando...' : tipoRegistro === 'usuario' ? 'Registrarse gratis' : 'Registrar y pagar'}
             </button>
           </form>
         ) : (
           <div className="text-center animate-fadein-slow">
             <h3 className="text-xl font-bold mb-4 text-green-600 flex items-center justify-center gap-2">
               <svg className="h-6 w-6 text-green-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-              Registro y pago exitoso
+              {pagoUrl === 'USUARIO_ACTIVADO' ? '¡Registro exitoso!' : 'Registro y pago exitoso'}
             </h3>
-            <p className="mb-4">Tu membresía ha sido activada. Ya puedes iniciar sesión y completar tu perfil de abogado.</p>
+            <p className="mb-4">
+              {pagoUrl === 'USUARIO_ACTIVADO' 
+                ? 'Tu cuenta de usuario ha sido creada. Ya puedes iniciar sesión y publicar tus consultas legales.' 
+                : 'Tu membresía ha sido activada. Ya puedes iniciar sesión y completar tu perfil de abogado.'}
+            </p>
             <p className="text-sm text-gray-600 mb-6">
-              Plan: <strong className="capitalize">{form.plan}</strong> | Usuario ID: {usuarioId}
+              {tipoRegistro === 'abogado' && `Plan: Premium | `}Usuario ID: {usuarioId}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link to="/login" className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-all duration-200 shadow">

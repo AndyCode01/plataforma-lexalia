@@ -36,9 +36,9 @@ export const crearPreferencia = async (req, res) => {
       body: {
         items: [
           {
-            title: `Membresía Lexalia (${plan})`,
+            title: 'Membresía Premium Lexalia',
             quantity: 1,
-            unit_price: plan === 'pro' ? 120000 : plan === 'premium' ? 180000 : 60000,
+            unit_price: 100000,
             currency_id: 'COP',
           },
         ],
