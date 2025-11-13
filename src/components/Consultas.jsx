@@ -88,7 +88,7 @@ export default function Consultas() {
   const isUsuario = user?.rol === 'usuario';
 
   return (
-    <section className="py-12 bg-gray-50 min-h-screen">
+    <section className="pt-24 pb-12 bg-gray-50 min-h-screen">
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Consultas Legales</h1>
@@ -207,6 +207,18 @@ function ConsultaCard({ consulta, isAbogado, onResponder }) {
     setShowRespuesta(false);
   };
 
+  const formatearFecha = (fecha) => {
+    const date = new Date(fecha);
+    const opciones = { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+    return date.toLocaleDateString('es-ES', opciones);
+  };
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-lg">
       <div className="flex items-start justify-between mb-3">
@@ -219,7 +231,7 @@ function ConsultaCard({ consulta, isAbogado, onResponder }) {
             <span>•</span>
             <span>Por {consulta.usuario?.nombre}</span>
             <span>•</span>
-            <span>{new Date(consulta.createdAt).toLocaleDateString()}</span>
+            <span>{formatearFecha(consulta.createdAt)}</span>
           </div>
         </div>
       </div>
@@ -228,13 +240,15 @@ function ConsultaCard({ consulta, isAbogado, onResponder }) {
 
       {consulta.respuestas && consulta.respuestas.length > 0 && (
         <div className="mt-4 space-y-3 border-t pt-4">
-          <h4 className="font-semibold text-gray-700">Respuestas:</h4>
+          <h4 className="font-semibold text-gray-700">
+            Respuestas ({consulta.respuestas.length}):
+          </h4>
           {consulta.respuestas.map(resp => (
             <div key={resp.id} className="bg-green-50 p-4 rounded-lg border border-green-100">
               <div className="flex items-center gap-2 mb-2 text-sm text-gray-600">
                 <span className="font-semibold text-green-700">⚖️ {resp.abogado?.usuario?.nombre}</span>
                 <span>•</span>
-                <span>{new Date(resp.createdAt).toLocaleDateString()}</span>
+                <span>{formatearFecha(resp.createdAt)}</span>
               </div>
               <p className="text-gray-700 whitespace-pre-line">{resp.contenido}</p>
             </div>
@@ -243,32 +257,42 @@ function ConsultaCard({ consulta, isAbogado, onResponder }) {
       )}
 
       {isAbogado && (
-        <div className="mt-4">
+        <div className="mt-4 border-t pt-4">
           {!showRespuesta ? (
             <button
               onClick={() => setShowRespuesta(true)}
-              className="text-blue-600 hover:text-blue-700 font-medium"
+              className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium transition"
             >
-              💬 Responder
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              Agregar mi respuesta
             </button>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-2 bg-blue-50 p-4 rounded-lg">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tu respuesta profesional:
+              </label>
               <textarea
                 value={respuesta}
                 onChange={(e) => setRespuesta(e.target.value)}
                 rows="4"
                 className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Escribe tu respuesta profesional..."
+                placeholder="Comparte tu conocimiento legal para ayudar al usuario..."
               ></textarea>
               <div className="flex gap-2">
                 <button
                   onClick={handleSubmitRespuesta}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                  disabled={!respuesta.trim()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Enviar Respuesta
                 </button>
                 <button
-                  onClick={() => setShowRespuesta(false)}
+                  onClick={() => {
+                    setShowRespuesta(false);
+                    setRespuesta('');
+                  }}
                   className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition"
                 >
                   Cancelar
