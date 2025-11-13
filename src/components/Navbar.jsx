@@ -37,6 +37,11 @@ const Navbar = () => {
               </a>
               {user ? (
                 <>
+                  {(user.rol === 'usuario' || user.rol === 'abogado') && (
+                    <Link to="/consultas" className="hover:bg-slate-700 px-3 py-2 rounded-md text-sm font-medium transition">
+                      💬 Consultas
+                    </Link>
+                  )}
                   <Link to="/mi-perfil" className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium transition">
                     Mi Perfil
                   </Link>
@@ -104,6 +109,11 @@ const Navbar = () => {
             </a>
             {user ? (
               <>
+                {(user.rol === 'usuario' || user.rol === 'abogado') && (
+                  <Link to="/consultas" className="block hover:bg-slate-700 px-3 py-2 rounded-md text-base font-medium">
+                    💬 Consultas
+                  </Link>
+                )}
                 <Link to="/mi-perfil" className="block bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded-md text-base font-medium">
                   Mi Perfil
                 </Link>

@@ -265,14 +265,20 @@ export default function MiPerfil() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Especialidad</label>
-                <input
-                  type="text"
+                <select
                   name="especialidad"
                   value={perfil.especialidad}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Ej: Derecho Civil"
-                />
+                >
+                  <option value="">Selecciona una especialidad</option>
+                  <option value="Derecho Civil">Derecho Civil</option>
+                  <option value="Derecho Penal">Derecho Penal</option>
+                  <option value="Derecho Laboral">Derecho Laboral</option>
+                  <option value="Derecho de Familia">Derecho de Familia</option>
+                  <option value="Derecho Comercial">Derecho Comercial</option>
+                  <option value="Otro">Otro</option>
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Ciudad</label>
