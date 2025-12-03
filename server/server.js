@@ -17,8 +17,23 @@ import { Consulta } from './models/Consulta.js';
 import { Respuesta } from './models/Respuesta.js';
 
 const app = express();
-const allowedOrigin = process.env.CORS_ORIGIN || '*';
-app.use(cors({ origin: allowedOrigin, credentials: true }));
+const allowedOrigins = [
+  'http://lexaliaabogados.com',
+  'https://lexaliaabogados.com',
+  'http://www.lexaliaabogados.com',
+  'https://www.lexaliaabogados.com'
+];
+app.use(cors({
+  origin: function(origin, callback) {
+    // Permitir peticiones sin origen (como Postman) o desde los orígenes permitidos
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('No permitido por CORS'));
+    }
+  },
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
