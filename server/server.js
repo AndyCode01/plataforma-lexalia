@@ -1,78 +1,92 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import https from 'https';
+import http from 'http';
+import fs from 'fs';
+
+// Internal imports
+import { connectDB, sequelize } from './config/database.js';
+import { defineModelRelationships } from './config/relationships.js';
+import { CORS_CONFIG, PORT, DB_CONFIG } from './config/constants.js';
+
+// Routes imports
 import authRoutes from './routes/auth.js';
 import abogadosRoutes from './routes/abogados.js';
 import mercadoPagoRoutes from './routes/mercadopago.js';
 import uploadRoutes from './routes/upload.js';
 import adminRoutes from './routes/admin.js';
 import consultasRoutes from './routes/consultas.js';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { connectDB, sequelize } from './config/database.js';
-import { Usuario } from './models/Usuario.js';
-import { Abogado } from './models/Abogado.js';
-import { Plan } from './models/Plan.js';
-import { Consulta } from './models/Consulta.js';
-import { Respuesta } from './models/Respuesta.js';
 
 const app = express();
-const allowedOrigins = [
-  'http://lexaliaabogados.com',
-  'https://lexaliaabogados.com',
-  'http://www.lexaliaabogados.com',
-  'https://www.lexaliaabogados.com'
-];
-app.use(cors({
-  origin: function(origin, callback) {
-    // Permitir peticiones sin origen (como Postman) o desde los orígenes permitidos
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('No permitido por CORS'));
-    }
-  },
-  credentials: true
-}));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Servir archivos subidos (fotos de perfil)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Middleware
+app.use(cors(CORS_CONFIG));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Definir relaciones
-Usuario.hasMany(Consulta, { foreignKey: 'usuario_id', as: 'consultas' });
-Consulta.belongsTo(Usuario, { foreignKey: 'usuario_id', as: 'usuario' });
+// Define model relationships
+defineModelRelationships();
 
-Consulta.hasMany(Respuesta, { foreignKey: 'consulta_id', as: 'respuestas' });
-Respuesta.belongsTo(Consulta, { foreignKey: 'consulta_id', as: 'consulta' });
-
-Usuario.hasMany(Respuesta, { foreignKey: 'abogado_id', as: 'respuestas' });
-Respuesta.belongsTo(Usuario, { foreignKey: 'abogado_id', as: 'abogado' });
-
+// Health check
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
+
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/abogados', abogadosRoutes);
 app.use('/api/mercadopago', mercadoPagoRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/consultas', consultasRoutes);
-console.log('🔧 Montando rutas de admin en /api/admin...');
 app.use('/api/admin', adminRoutes);
-console.log('✅ Todas las rutas montadas');
 
-const PORT = process.env.PORT || 4000;
-
+// Start server with HTTPS support
 const start = async () => {
   try {
     await connectDB();
-    // Asociaciones ya están definidas en los modelos; sincronizar con alter para actualizar tablas
-    await sequelize.sync({ alter: true });
-    console.log('✅ Tablas sincronizadas');
-    app.listen(PORT, () => console.log(`API escuchando en http://localhost:${PORT}`));
+    await sequelize.sync(DB_CONFIG.syncOptions);
+    console.log('✅ Base de datos sincronizada');
+    
+    const NODE_ENV = process.env.NODE_ENV || 'development';
+    const DOMAIN = process.env.DOMAIN || 'localhost';
+    
+    // Path to SSL certificates (Let's Encrypt)
+    const certPath = `/etc/letsencrypt/live/${DOMAIN}/fullchain.pem`;
+    const keyPath = `/etc/letsencrypt/live/${DOMAIN}/privkey.pem`;
+    const isProduction = NODE_ENV === 'production' && fs.existsSync(certPath) && fs.existsSync(keyPath);
+
+    if (isProduction) {
+      // HTTPS in production
+      const options = {
+        cert: fs.readFileSync(certPath),
+        key: fs.readFileSync(keyPath),
+      };
+
+      https.createServer(options, app).listen(PORT, () => {
+        console.log(`✅ API escuchando en https://${DOMAIN}:${PORT}`);
+      });
+
+      // HTTP redirect to HTTPS (port 80)
+      http.createServer((req, res) => {
+        res.writeHead(301, {
+          Location: `https://${DOMAIN}${req.url}`,
+        });
+        res.end();
+      }).listen(80, () => {
+        console.log(`🔄 HTTP redirección activa (80 → 443)`);
+      });
+    } else {
+      // HTTP in development
+      app.listen(PORT, () => {
+        console.log(`✅ API escuchando en http://localhost:${PORT}`);
+      });
+    }
   } catch (err) {
-    console.error('Error al iniciar el servidor:', err);
+    console.error('❌ Error al iniciar el servidor:', err);
     process.exit(1);
   }
 };

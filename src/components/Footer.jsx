@@ -46,13 +46,13 @@ const Footer = () => {
               <li>
                 📧
                 <a href="mailto:lexaliaadm@gmail.com" className="hover:text-blue-400 transition ml-2">
-                  lexalia@gmail.com
+                  lexaliaadm@gmail.com
                 </a>
               </li>
               <li>
                 📱
                 <a href="tel:+573057135870" className="hover:text-blue-400 transition ml-2">
-                  +57 601 687 1962
+                  +57 305 713 5870
                 </a>
               </li>
               <li>📍 Bogotá, Colombia</li>
