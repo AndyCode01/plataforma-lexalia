@@ -44,12 +44,29 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/consultas', consultasRoutes);
 app.use('/api/admin', adminRoutes);
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const connectWithRetry = async (maxRetries = 20, delayMs = 3000) => {
+  for (let attempt = 1; attempt <= maxRetries; attempt += 1) {
+    try {
+      await connectDB();
+      await sequelize.sync(DB_CONFIG.syncOptions);
+      console.log('✅ Base de datos sincronizada');
+      return;
+    } catch (err) {
+      console.error(`❌ Error conectando a MySQL (intento ${attempt}/${maxRetries}):`, err.message);
+      if (attempt === maxRetries) {
+        throw err;
+      }
+      await sleep(delayMs);
+    }
+  }
+};
+
 // Start server with HTTPS support
 const start = async () => {
   try {
-    await connectDB();
-    await sequelize.sync(DB_CONFIG.syncOptions);
-    console.log('✅ Base de datos sincronizada');
+    await connectWithRetry();
     
     const NODE_ENV = process.env.NODE_ENV || 'development';
     const DOMAIN = process.env.DOMAIN || 'localhost';
