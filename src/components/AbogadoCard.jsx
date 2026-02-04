@@ -1,7 +1,16 @@
+const normalizeImageUrl = (url) => {
+  if (!url) return url;
+  if (typeof window === 'undefined') return url;
+  if (url.startsWith('http://localhost:4000')) {
+    return url.replace('http://localhost:4000', window.location.origin);
+  }
+  return url;
+};
+
 const AbogadoCard = ({ abogado, onClick }) => {
   const imgSrc =
-    abogado.foto_url ||
-    abogado.foto ||
+    normalizeImageUrl(abogado.foto_url) ||
+    normalizeImageUrl(abogado.foto) ||
     (abogado.nombre
       ? `https://ui-avatars.com/api/?name=${encodeURIComponent(abogado.nombre)}&size=256&background=0D8ABC&color=fff`
       : 'https://via.placeholder.com/256x256.png?text=Abogado');

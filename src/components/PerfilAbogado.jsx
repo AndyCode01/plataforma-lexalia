@@ -21,6 +21,15 @@ const PerfilAbogado = ({ abogado, onClose }) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const normalizeImageUrl = (url) => {
+    if (!url) return url;
+    if (typeof window === 'undefined') return url;
+    if (url.startsWith('http://localhost:4000')) {
+      return url.replace('http://localhost:4000', window.location.origin);
+    }
+    return url;
+  };
+
   return (
     <div 
       className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
@@ -43,7 +52,13 @@ const PerfilAbogado = ({ abogado, onClose }) => {
         <div className="relative h-40 bg-gradient-to-br from-blue-500 to-blue-700 rounded-t-2xl">
           <div className="absolute -bottom-12 left-6">
             <img
-              src={abogado.foto_url || abogado.foto || (abogado.nombre ? `https://ui-avatars.com/api/?name=${encodeURIComponent(abogado.nombre)}&size=200&background=random` : 'https://via.placeholder.com/200.png?text=Abogado')}
+              src={
+                normalizeImageUrl(abogado.foto_url) ||
+                normalizeImageUrl(abogado.foto) ||
+                (abogado.nombre
+                  ? `https://ui-avatars.com/api/?name=${encodeURIComponent(abogado.nombre)}&size=200&background=random`
+                  : 'https://via.placeholder.com/200.png?text=Abogado')
+              }
               alt={abogado.nombre}
               className="w-24 h-24 rounded-full border-4 border-white shadow-lg object-cover"
             />
