@@ -1,8 +1,9 @@
-const FormField = ({ label, type = 'text', value, onChange, required = false, placeholder = '' }) => (
+const FormField = ({ label, type = 'text', name, value, onChange, required = false, placeholder = '' }) => (
   <div>
     <label className="block text-sm font-medium mb-1">{label}</label>
     <input
       type={type}
+      name={name}
       value={value}
       onChange={onChange}
       required={required}
