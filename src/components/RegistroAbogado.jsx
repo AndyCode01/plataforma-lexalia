@@ -48,22 +48,17 @@ export default function RegistroAbogado() {
         return;
       }
       
-      // Si es abogado, simular pago
-      const pagoRes = await apiPost('/api/mercadopago/simular-pago', {
-        usuarioId: res.userId,
-        plan: form.plan,
-      });
-      setPagoUrl('SIMULADO');
-      setError(null);
-      setErrores([]);
-      
-      /* MODO PRODUCCIÓN: descomentar cuando tengas el token de MercadoPago
+      // Si es abogado, crear preferencia de MercadoPago y redirigir
       const pagoRes = await apiPost('/api/mercadopago/preferencia', {
         usuarioId: res.userId,
         plan: form.plan,
       });
-      setPagoUrl(pagoRes.url);
-      */
+      if (pagoRes?.url) {
+        window.location.href = pagoRes.url;
+        return;
+      }
+      setError('No se pudo iniciar el pago. Intenta nuevamente.');
+      setErrores([]);
     } catch (err) {
       // Si el backend devuelve errores de validación
       if (err.data && Array.isArray(err.data.errors)) {
