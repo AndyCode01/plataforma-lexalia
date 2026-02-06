@@ -29,7 +29,7 @@ export default function RegistroAbogado() {
     setErrores([]);
     try {
       // Registrar según el tipo seleccionado
-      const res = await apiPost('/api/auth/register', {
+      const res = await apiPost('/auth/register', {
         nombre: form.nombre,
         email: form.email,
         password: form.password,
@@ -49,7 +49,7 @@ export default function RegistroAbogado() {
       }
       
       // Si es abogado, crear preferencia de MercadoPago y redirigir
-      const pagoRes = await apiPost('/api/mercadopago/preferencia', {
+      const pagoRes = await apiPost('/mercadopago/preferencia', {
         usuarioId: res.userId,
         plan: form.plan,
       });
