@@ -16,10 +16,15 @@ dist-ssr
 *.local
 
 # Environment files
+# Ignore local development .env
 .env
 .env.local
-.env.production
 .env.development
+server/.env
+server/.env.development
+
+# But allow .env.production template (with placeholders, no real secrets)
+!server/.env.production
 
 # Database files (generated backups)
 *.sql
