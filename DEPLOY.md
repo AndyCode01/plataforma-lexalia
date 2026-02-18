@@ -169,26 +169,45 @@ docker-compose -f docker-compose.prod.yml logs -f nginx
 # Verificar certificado
 docker-compose -f docker-compose.prod.yml exec certbot ls -la /etc/letsencrypt/live/
 
+# Verificar permisos
+docker-compose -f docker-compose.prod.yml exec nginx ls -la /etc/letsencrypt/live/
+
 # Renovar certificado
-docker-compose -f docker-compose.prod.yml run --rm certbot certonly --force-renewal -d andreitus.online
+docker-compose -f docker-compose.prod.yml run --rm certbot certonly --force-renewal \
+  -d andreitus.online -d www.andreitus.online
 ```
 
-### API no responde
+### API no conecta a MySQL
 ```bash
-# Verificar que la BD está conectada
-docker-compose -f docker-compose.prod.yml exec db mysqladmin ping -h localhost -uroot
+# Verificar que la BD está corriendo
+docker-compose -f docker-compose.prod.yml ps
 
-# Revisar logs del API
-docker-compose -f docker-compose.prod.yml logs api
+# Verificar credenciales en .env
+cat server/.env | grep DB_PASS
+
+# Probar conexión a MySQL
+docker-compose -f docker-compose.prod.yml exec db mysql -uroot -p$DB_PASS -e "SELECT 1"
+
+# Ver logs del API
+docker-compose -f docker-compose.prod.yml logs -f api
+
+# Ver logs de MySQL
+docker-compose -f docker-compose.prod.yml logs -f db
 ```
 
-### Base de datos corrupta
+### Si nada funciona, reiniciar todo
 ```bash
-# Hacer backup
-docker-compose -f docker-compose.prod.yml exec db mysqldump -uroot lexalia > backup.sql
+# Detener servicios
+docker-compose -f docker-compose.prod.yml down
 
-# Restaurar si es necesario
-cat backup.sql | docker-compose -f docker-compose.prod.yml exec -T db mysql -uroot lexalia
+# Actualizar código
+git pull origin main
+
+# Reconstruir
+docker-compose -f docker-compose.prod.yml build --no-cache
+
+# Iniciar
+docker-compose -f docker-compose.prod.yml up -d
 ```
 
 ## 📝 Notas Importantes
