@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FaUser, FaEnvelope, FaLock, FaRegCreditCard } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
-import { apiPost } from '../services/api';
+import { Link, useNavigate } from 'react-router-dom';
+import { apiPost, apiGet } from '../services/api';
 
 const planes = [
   { value: 'premium', label: 'Premium', precio: 100000 },
@@ -15,6 +15,39 @@ export default function RegistroAbogado() {
   const [errores, setErrores] = useState([]);
   const [usuarioId, setUsuarioId] = useState(null);
   const [pagoUrl, setPagoUrl] = useState(null);
+  const [esperandoPago, setEsperandoPago] = useState(false);
+  const [pagoAprobado, setPagoAprobado] = useState(false);
+  const navigate = useNavigate();
+
+  // Polling para verificar el estado del pago
+  useEffect(() => {
+    if (!esperandoPago || !usuarioId) return;
+
+    const verificarPago = async () => {
+      try {
+        const data = await apiGet(`/mercadopago/estado/${usuarioId}`);
+        if (data.estado_pago === 'aprobado') {
+          setPagoAprobado(true);
+          setEsperandoPago(false);
+          setTimeout(() => {
+            navigate('/login', { 
+              state: { 
+                message: '¡Pago exitoso! Tu cuenta está activa. Inicia sesión para continuar.' 
+              } 
+            });
+          }, 2000);
+        }
+      } catch (err) {
+        console.error('Error verificando pago:', err);
+      }
+    };
+
+    // Verificar cada 3 segundos
+    verificarPago();
+    const interval = setInterval(verificarPago, 3000);
+
+    return () => clearInterval(interval);
+  }, [esperandoPago, usuarioId, navigate]);
 
   const handleChange = e => {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }));
@@ -48,13 +81,17 @@ export default function RegistroAbogado() {
         return;
       }
       
-      // Si es abogado, crear preferencia de MercadoPago y redirigir
+      // Si es abogado, crear preferencia de MercadoPago y abrir en nueva ventana
       const pagoRes = await apiPost('/mercadopago/preferencia', {
         usuarioId: res.userId,
         plan: form.plan,
       });
       if (pagoRes?.url) {
-        window.location.href = pagoRes.url;
+        // Abrir Mercado Pago en nueva ventana
+        window.open(pagoRes.url, '_blank', 'width=800,height=800');
+        // Activar modo "Esperando pago"
+        setEsperandoPago(true);
+        setLoading(false);
         return;
       }
       setError('No se pudo iniciar el pago. Intenta nuevamente.');
@@ -76,15 +113,71 @@ export default function RegistroAbogado() {
   return (
     <section className="py-20 min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-blue-300 animate-fadein">
       <div className="max-w-md w-full bg-white/90 p-8 rounded-2xl shadow-2xl border border-blue-100 backdrop-blur-md">
-  <h2 className="text-3xl font-extrabold mb-8 text-center text-blue-700 drop-shadow">Registro</h2>
-        {error && <div className="mb-4 text-red-600 bg-red-100 border border-red-200 rounded px-3 py-2 animate-shake">{error}</div>}
-        {errores.length > 0 && (
-          <ul className="mb-4 text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 animate-shake">
-            {errores.map((msg, i) => <li key={i}>{msg}</li>)}
-          </ul>
+        <h2 className="text-3xl font-extrabold mb-8 text-center text-blue-700 drop-shadow">Registro</h2>
+        
+        {/* Pantalla de Pago Aprobado */}
+        {pagoAprobado && (
+          <div className="text-center py-8">
+            <div className="mb-6">
+              <div className="w-20 h-20 mx-auto bg-green-100 rounded-full flex items-center justify-center animate-bounce">
+                <svg className="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+            <h3 className="text-2xl font-bold text-green-700 mb-2">¡Pago Exitoso!</h3>
+            <p className="text-gray-600 mb-4">Tu cuenta ha sido activada correctamente</p>
+            <p className="text-sm text-gray-500">Redirigiendo al inicio de sesión...</p>
+          </div>
         )}
-        {!pagoUrl ? (
-          <form onSubmit={handleSubmit} className="space-y-5 animate-fadein-slow">
+
+        {/* Pantalla de Esperando Pago */}
+        {esperandoPago && !pagoAprobado && (
+          <div className="text-center py-8">
+            <div className="mb-6">
+              <div className="w-20 h-20 mx-auto border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+            <h3 className="text-2xl font-bold text-blue-700 mb-4">Esperando confirmación de pago</h3>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <p className="text-gray-700 mb-2">
+                <strong>Instrucciones:</strong>
+              </p>
+              <ol className="text-left text-sm text-gray-600 space-y-2">
+                <li>✓ 1. Se abrió Mercado Pago en una nueva ventana</li>
+                <li>✓ 2. Completa tu pago en esa ventana</li>
+                <li>✓ 3. Esta página detectará automáticamente tu pago</li>
+                <li>✓ 4. Serás redirigido al login cuando se confirme</li>
+              </ol>
+            </div>
+            <p className="text-sm text-gray-500 animate-pulse">
+              Verificando tu pago cada 3 segundos...
+            </p>
+            <button
+              onClick={() => {
+                setEsperandoPago(false);
+                setUsuarioId(null);
+                setError('Pago cancelado. Puedes intentar nuevamente.');
+              }}
+              className="mt-4 text-sm text-red-600 hover:text-red-800 underline"
+            >
+              Cancelar y volver
+            </button>
+          </div>
+        )}
+
+        {/* Formulario de Registro (solo si no está esperando pago) */}
+        {!esperandoPago && !pagoAprobado && (
+          <>
+            {error && <div className="mb-4 text-red-600 bg-red-100 border border-red-200 rounded px-3 py-2 animate-shake">{error}</div>}
+            {errores.length > 0 && (
+              <ul className="mb-4 text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 animate-shake">
+                {errores.map((msg, i) => <li key={i}>{msg}</li>)}
+              </ul>
+            )}
+            
+            {/* Formulario de Registro */}
+            {!pagoUrl && (
+              <form onSubmit={handleSubmit} className="space-y-5 animate-fadein-slow">
             {/* Selector de tipo de registro */}
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
               <label className="block text-sm font-medium mb-3 text-blue-800">¿Cómo deseas registrarte?</label>
@@ -153,29 +246,29 @@ export default function RegistroAbogado() {
               {loading ? 'Procesando...' : tipoRegistro === 'usuario' ? 'Registrarse gratis' : 'Registrar y pagar'}
             </button>
           </form>
-        ) : (
-          <div className="text-center animate-fadein-slow">
-            <h3 className="text-xl font-bold mb-4 text-green-600 flex items-center justify-center gap-2">
-              <svg className="h-6 w-6 text-green-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-              {pagoUrl === 'USUARIO_ACTIVADO' ? '¡Registro exitoso!' : 'Registro y pago exitoso'}
-            </h3>
-            <p className="mb-4">
-              {pagoUrl === 'USUARIO_ACTIVADO' 
-                ? 'Tu cuenta de usuario ha sido creada. Ya puedes iniciar sesión y publicar tus consultas legales.' 
-                : 'Tu membresía ha sido activada. Ya puedes iniciar sesión y completar tu perfil de abogado.'}
-            </p>
-            <p className="text-sm text-gray-600 mb-6">
-              {tipoRegistro === 'abogado' && `Plan: Premium | `}Usuario ID: {usuarioId}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link to="/login" className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-all duration-200 shadow">
-                Iniciar sesión
-              </Link>
-              <Link to="/" className="inline-block px-6 py-2 bg-gray-600 text-white rounded-lg font-bold hover:bg-gray-700 transition-all duration-200 shadow">
-                Ir al inicio
-              </Link>
+            )}
+
+            {/* Mensaje de Usuario Activado */}
+            {pagoUrl === 'USUARIO_ACTIVADO' && (
+            <div className="text-center animate-fadein-slow mt-6">
+              <h3 className="text-xl font-bold mb-4 text-green-600 flex items-center justify-center gap-2">
+                <svg className="h-6 w-6 text-green-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                ¡Registro exitoso!
+              </h3>
+              <p className="mb-4">
+                Tu cuenta de usuario ha sido creada. Ya puedes iniciar sesión y publicar tus consultas legales.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Link to="/login" className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-all duration-200 shadow">
+                  Iniciar sesión
+                </Link>
+                <Link to="/" className="inline-block px-6 py-2 bg-gray-600 text-white rounded-lg font-bold hover:bg-gray-700 transition-all duration-200 shadow">
+                  Ir al inicio
+                </Link>
+              </div>
             </div>
-          </div>
+            )}
+          </>
         )}
       </div>
       {/* Animaciones personalizadas */}

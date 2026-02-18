@@ -6,7 +6,7 @@ export class Plan extends Model {}
 
 Plan.init({
   id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
-  abogado_id: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
+  abogado_id: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
   tipo: { type: DataTypes.ENUM('basico', 'pro', 'premium'), allowNull: false, defaultValue: 'premium' },
   fecha_inicio: { type: DataTypes.DATEONLY, allowNull: false },
   fecha_fin: { type: DataTypes.DATEONLY, allowNull: true },
@@ -15,5 +15,5 @@ Plan.init({
   estado_pago: { type: DataTypes.ENUM('pendiente', 'aprobado', 'rechazado'), allowNull: false, defaultValue: 'pendiente' }
 }, { sequelize, tableName: 'planes' });
 
-Abogado.hasMany(Plan, { foreignKey: 'abogado_id', as: 'planes' });
+Abogado.hasMany(Plan, { foreignKey: 'abogado_id', as: 'planes', onDelete: 'SET NULL', onUpdate: 'CASCADE' });
 Plan.belongsTo(Abogado, { foreignKey: 'abogado_id', as: 'abogado' });

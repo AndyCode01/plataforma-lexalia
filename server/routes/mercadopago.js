@@ -1,12 +1,14 @@
 import { Router } from 'express';
-import { crearPreferencia, pagoWebhook } from '../controllers/mercadoPagoController.js';
+import { crearPreferencia, renovarSuscripcion, obtenerEstadoSuscripcion, pagoWebhook } from '../controllers/mercadoPagoController.js';
 import { Usuario } from '../models/Usuario.js';
 import { Abogado } from '../models/Abogado.js';
 import { Plan } from '../models/Plan.js';
 
 const router = Router();
 
+router.get('/estado/:usuarioId', obtenerEstadoSuscripcion);
 router.post('/preferencia', crearPreferencia);
+router.post('/renovar', renovarSuscripcion);
 router.post('/webhook', pagoWebhook);
 
 // Endpoint temporal para desarrollo: simula aprobación sin MercadoPago

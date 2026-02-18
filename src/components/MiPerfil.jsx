@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { apiPatch, apiUpload } from '../services/api';
 
-export default function MiPerfil() {
+const MiPerfil = () => {
   const { user, token, updateUser, isAdmin } = useAuth();
   const [perfil, setPerfil] = useState({
     especialidad: '',
@@ -20,6 +21,8 @@ export default function MiPerfil() {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [fotoFile, setFotoFile] = useState(null);
   const [fotoPreview, setFotoPreview] = useState(null);
+  const [estadoSuscripcion, setEstadoSuscripcion] = useState(null);
+  const [loadingSuscripcion, setLoadingSuscripcion] = useState(false);
 
   useEffect(() => {
     if (user?.perfil) {
@@ -36,6 +39,16 @@ export default function MiPerfil() {
         foto_url: user.perfil.foto_url || '',
       });
       setFotoPreview(user.perfil.foto_url);
+    }
+
+    // Cargar estado de suscripción si es abogado
+    if (user?.rol === 'abogado') {
+      setLoadingSuscripcion(true);
+      fetch(`/api/mercadopago/estado/${user.id}`)
+        .then(res => res.json())
+        .then(data => setEstadoSuscripcion(data))
+        .catch(err => console.error('Error cargando suscripción:', err))
+        .finally(() => setLoadingSuscripcion(false));
     }
   }, [user]);
 
@@ -61,11 +74,31 @@ export default function MiPerfil() {
     }
   };
 
+  const handleRenovar = async () => {
+    setLoadingSuscripcion(true);
+    try {
+      const response = await fetch('/api/mercadopago/renovar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuarioId: user.id, plan: estadoSuscripcion?.plan || 'basico' }),
+      });
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (err) {
+      console.error('Error renovando:', err);
+      setMessage({ type: 'error', text: 'Error al iniciar renovación' });
+    } finally {
+      setLoadingSuscripcion(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage({ type: '', text: '' });
-    
+
     try {
       // Si hay foto nueva, subirla primero al backend y obtener URL
       let foto_url = perfil.foto_url;
@@ -77,16 +110,14 @@ export default function MiPerfil() {
       const datosActualizados = {
         ...perfil,
         foto_url,
-        idiomas: perfil.idiomas, // Ya viene como string separado por comas
+        idiomas: perfil.idiomas,
       };
 
       await apiPatch(`/api/abogados/${user.perfil.id}`, datosActualizados, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      // Actualizar el contexto local
       updateUser({ perfil: { ...user.perfil, ...datosActualizados } });
-      
       setMessage({ type: 'success', text: '✓ Perfil actualizado exitosamente' });
     } catch (err) {
       setMessage({ type: 'error', text: err.message || 'Error al actualizar el perfil' });
@@ -125,7 +156,9 @@ export default function MiPerfil() {
               <span className={`px-3 py-1 rounded-full ${user.activo ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
                 {user.activo ? '✓ Activo' : 'Inactivo'}
               </span>
-              {user.plan && !isAdmin() && !isUsuario && <span className="ml-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full capitalize">{user.plan}</span>}
+              {user.plan && !isAdmin() && !isUsuario && (
+                <span className="ml-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full capitalize">{user.plan}</span>
+              )}
             </div>
           </div>
 
@@ -147,7 +180,6 @@ export default function MiPerfil() {
           </div>
 
           {isAdmin() ? (
-            // Vista para administradores
             <div className="text-center py-12">
               <div className="mb-6">
                 <svg className="w-24 h-24 mx-auto text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -158,15 +190,14 @@ export default function MiPerfil() {
               <p className="text-gray-600 mb-6">
                 Como administrador, tienes acceso completo al panel de gestión de usuarios y abogados.
               </p>
-              <a
-                href="/admin"
+              <Link
+                to="/admin"
                 className="inline-block bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition font-medium"
               >
                 Ir al Panel de Administración
-              </a>
+              </Link>
             </div>
           ) : isUsuario ? (
-            // Vista para usuarios (solo foto y acceso a consultas)
             <>
               {message.text && (
                 <div className={`mb-4 p-3 rounded ${message.type === 'success' ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-600'}`}>
@@ -220,17 +251,16 @@ export default function MiPerfil() {
                   <p className="text-gray-600 mb-4">
                     Publica tu consulta y nuestros abogados te responderán
                   </p>
-                  <a
-                    href="/consultas"
+                  <Link
+                    to="/consultas"
                     className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-medium"
                   >
                     💬 Ir a Consultas
-                  </a>
+                  </Link>
                 </div>
               </div>
             </>
           ) : (
-            // Vista para abogados (formulario de perfil completo)
             <>
               {message.text && (
                 <div className={`mb-4 p-3 rounded ${message.type === 'success' ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-600'}`}>
@@ -238,174 +268,231 @@ export default function MiPerfil() {
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Foto de perfil */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Foto de perfil</label>
-              <div className="flex items-center space-x-4">
-                <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200">
-                  {fotoPreview ? (
-                    <img src={fotoPreview} alt="Preview" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      Sin foto
+              {/* Sección de Suscripción */}
+              {!loadingSuscripcion && estadoSuscripcion && (
+                <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">Estado de Suscripción</h3>
+                      <p className="text-gray-600 text-sm">Gestiona tu membresía profesional</p>
                     </div>
+                    <div className={`px-4 py-2 rounded-full font-semibold text-white ${
+                      estadoSuscripcion.caducado ? 'bg-red-500' :
+                      estadoSuscripcion.caducaProximamente ? 'bg-yellow-500' :
+                      estadoSuscripcion.activo ? 'bg-green-500' : 'bg-gray-500'
+                    }`}>
+                      {estadoSuscripcion.caducado ? '❌ Expirada' :
+                       estadoSuscripcion.caducaProximamente ? '⚠️ Próxima a vencer' :
+                       estadoSuscripcion.activo ? '✓ Activa' : '⏳ Pendiente'}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <div className="bg-white p-3 rounded">
+                      <p className="text-xs text-gray-600">Plan</p>
+                      <p className="text-lg font-semibold capitalize">{estadoSuscripcion.plan || 'N/A'}</p>
+                    </div>
+                    <div className="bg-white p-3 rounded">
+                      <p className="text-xs text-gray-600">Estado Pago</p>
+                      <p className="text-lg font-semibold capitalize">{estadoSuscripcion.estado_pago || 'N/A'}</p>
+                    </div>
+                    <div className="bg-white p-3 rounded">
+                      <p className="text-xs text-gray-600">Vencimiento</p>
+                      <p className="text-lg font-semibold">{estadoSuscripcion.fecha_expiracion ? new Date(estadoSuscripcion.fecha_expiracion).toLocaleDateString('es-CO') : 'N/A'}</p>
+                    </div>
+                    <div className="bg-white p-3 rounded">
+                      <p className="text-xs text-gray-600">Días Restantes</p>
+                      <p className={`text-lg font-semibold ${
+                        estadoSuscripcion.diasRestantes < 0 ? 'text-red-600' :
+                        estadoSuscripcion.diasRestantes <= 7 ? 'text-yellow-600' :
+                        'text-green-600'
+                      }`}>
+                        {estadoSuscripcion.diasRestantes !== null ? estadoSuscripcion.diasRestantes : 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {(estadoSuscripcion.caducado || estadoSuscripcion.caducaProximamente) && (
+                    <button
+                      onClick={handleRenovar}
+                      disabled={loadingSuscripcion}
+                      className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold disabled:opacity-50"
+                    >
+                      {loadingSuscripcion ? '🔄 Procesando...' : '🔄 Renovar Suscripción'}
+                    </button>
                   )}
                 </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFotoChange}
-                  className="text-sm"
-                />
-              </div>
-              <p className="text-xs text-gray-500 mt-1">Máximo 2MB, formatos: JPG, PNG</p>
-            </div>
+              )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Especialidad</label>
-                <select
-                  name="especialidad"
-                  value={perfil.especialidad}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Foto de perfil</label>
+                  <div className="flex items-center space-x-4">
+                    <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200">
+                      {fotoPreview ? (
+                        <img src={fotoPreview} alt="Preview" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400">
+                          Sin foto
+                        </div>
+                      )}
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFotoChange}
+                      className="text-sm"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Máximo 2MB, formatos: JPG, PNG</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Especialidad</label>
+                    <select
+                      name="especialidad"
+                      value={perfil.especialidad}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Selecciona una especialidad</option>
+                      <option value="Derecho Civil">Derecho Civil</option>
+                      <option value="Derecho Penal">Derecho Penal</option>
+                      <option value="Derecho Laboral">Derecho Laboral</option>
+                      <option value="Derecho de Familia">Derecho de Familia</option>
+                      <option value="Derecho Comercial">Derecho Comercial</option>
+                      <option value="Otro">Otro</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Ciudad</label>
+                    <input
+                      type="text"
+                      name="ciudad"
+                      value={perfil.ciudad}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Ej: Bogotá"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Años de experiencia</label>
+                    <input
+                      type="number"
+                      name="experiencia"
+                      value={perfil.experiencia}
+                      onChange={handleChange}
+                      min="0"
+                      className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Casos ganados</label>
+                    <input
+                      type="number"
+                      name="casos_ganados"
+                      value={perfil.casos_ganados}
+                      onChange={handleChange}
+                      min="0"
+                      className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Teléfono</label>
+                    <input
+                      type="tel"
+                      name="telefono"
+                      value={perfil.telefono}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="+57 300 123 4567"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Email público (opcional)</label>
+                    <input
+                      type="email"
+                      name="email_publico"
+                      value={perfil.email_publico}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="contacto@ejemplo.com"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Email que verán tus clientes potenciales</p>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Email público (opcional)</label>
+                  <input
+                    type="email"
+                    name="email_publico"
+                    value={perfil.email_publico}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="contacto@ejemplo.com"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Email que verán tus clientes potenciales</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Descripción profesional</label>
+                  <textarea
+                    name="descripcion"
+                    value={perfil.descripcion}
+                    onChange={handleChange}
+                    rows="4"
+                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Cuéntanos sobre tu experiencia, logros y áreas de especialización..."
+                  ></textarea>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Idiomas</label>
+                  <input
+                    type="text"
+                    name="idiomas"
+                    value={perfil.idiomas}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Español, Inglés, Francés"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Separados por comas</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Educación</label>
+                  <textarea
+                    name="educacion"
+                    value={perfil.educacion}
+                    onChange={handleChange}
+                    rows="3"
+                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Universidad, títulos, certificaciones..."
+                  ></textarea>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
                 >
-                  <option value="">Selecciona una especialidad</option>
-                  <option value="Derecho Civil">Derecho Civil</option>
-                  <option value="Derecho Penal">Derecho Penal</option>
-                  <option value="Derecho Laboral">Derecho Laboral</option>
-                  <option value="Derecho de Familia">Derecho de Familia</option>
-                  <option value="Derecho Comercial">Derecho Comercial</option>
-                  <option value="Otro">Otro</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Ciudad</label>
-                <input
-                  type="text"
-                  name="ciudad"
-                  value={perfil.ciudad}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Ej: Bogotá"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Años de experiencia</label>
-                <input
-                  type="number"
-                  name="experiencia"
-                  value={perfil.experiencia}
-                  onChange={handleChange}
-                  min="0"
-                  className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Casos ganados</label>
-                <input
-                  type="number"
-                  name="casos_ganados"
-                  value={perfil.casos_ganados}
-                  onChange={handleChange}
-                  min="0"
-                  className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Teléfono</label>
-                <input
-                  type="tel"
-                  name="telefono"
-                  value={perfil.telefono}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="+57 300 123 4567"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Email público (opcional)</label>
-                <input
-                  type="email"
-                  name="email_publico"
-                  value={perfil.email_publico}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="contacto@ejemplo.com"
-                />
-                <p className="text-xs text-gray-500 mt-1">Email que verán tus clientes potenciales</p>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Email público (opcional)</label>
-              <input
-                type="email"
-                name="email_publico"
-                value={perfil.email_publico}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="contacto@ejemplo.com"
-              />
-              <p className="text-xs text-gray-500 mt-1">Email que verán tus clientes potenciales</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Descripción profesional</label>
-              <textarea
-                name="descripcion"
-                value={perfil.descripcion}
-                onChange={handleChange}
-                rows="4"
-                className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Cuéntanos sobre tu experiencia, logros y áreas de especialización..."
-              ></textarea>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Idiomas</label>
-              <input
-                type="text"
-                name="idiomas"
-                value={perfil.idiomas}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Español, Inglés, Francés"
-              />
-              <p className="text-xs text-gray-500 mt-1">Separados por comas</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Educación</label>
-              <textarea
-                name="educacion"
-                value={perfil.educacion}
-                onChange={handleChange}
-                rows="3"
-                className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Universidad, títulos, certificaciones..."
-              ></textarea>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
-            >
-              {loading ? 'Guardando cambios...' : 'Guardar cambios'}
-            </button>
-          </form>
-          </>
+                  {loading ? 'Guardando cambios...' : 'Guardar cambios'}
+                </button>
+              </form>
+            </>
           )}
         </div>
       </div>
     </section>
   );
-}
+};
+
+export default MiPerfil;

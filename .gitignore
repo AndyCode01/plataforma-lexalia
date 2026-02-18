@@ -23,16 +23,24 @@ dist-ssr
 
 # Database files (generated backups)
 *.sql
-!lexalia_backup_clean.sql
+backups/
 
 # Database sync files (generated dinamically)
 lexalia_local.sql
 lexalia_export.sql
 server/lexalia_backup.sql
 
+# User uploaded files
+server/uploads/
+uploads/
+
 # Temporary files
 *.zip
 *.tar.gz
+
+# Binaries and executables
+ngrok.exe
+*.exe
 
 # Editor directories and files
 .vscode/*

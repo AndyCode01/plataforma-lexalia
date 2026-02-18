@@ -24,7 +24,7 @@ const CatalogoAbogados = () => {
         if (filtroCiudad !== 'Todas') params.set('ciudad', filtroCiudad);
         if (filtroEspecialidad !== 'Todas') params.set('especialidad', filtroEspecialidad);
         if (busqueda.trim()) params.set('q', busqueda.trim());
-        const data = await apiGet(`/api/abogados?${params.toString()}`);
+        const data = await apiGet(`/abogados?${params.toString()}`);
         if (isMounted) setItems(Array.isArray(data) ? data : []);
       } catch (e) {
         // Fallback a datos locales si falla el backend

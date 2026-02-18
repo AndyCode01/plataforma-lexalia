@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 const Servicios = () => {
   const servicios = [
     {
@@ -55,12 +57,12 @@ const Servicios = () => {
                   <span className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full">Acompañamiento humano</span>
                 </div>
                 <div className="mt-8">
-                  <a
-                    href="/consultas"
+                  <Link
+                    to="/consultas"
                     className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg text-lg transition transform hover:scale-[1.02]"
                   >
                     Publicar mi consulta
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>

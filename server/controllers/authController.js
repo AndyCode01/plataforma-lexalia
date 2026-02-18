@@ -24,14 +24,16 @@ export const register = async (req, res) => {
 
     const password_hash = await bcrypt.hash(password, 10);
     
-    // Si es usuario normal, activar automáticamente
+    // Si es usuario normal, activar automáticamente con plan básico
+    // Si es abogado, dejar pendiente de pago hasta que complete el pago
     const userData = {
       nombre,
       email,
       password_hash,
       rol,
       activo: rol === 'usuario' ? true : false,
-      estado_pago: rol === 'usuario' ? 'aprobado' : 'pendiente'
+      estado_pago: 'pendiente',
+      plan: rol === 'usuario' ? 'basico' : null
     };
     
     const user = await Usuario.create(userData);

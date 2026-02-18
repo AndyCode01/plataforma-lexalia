@@ -1,7 +1,12 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
+
+const normalizePath = (path) => {
+  if (!path) return '';
+  return path.replace(/^\/api(\/|$)/, '/');
+};
 
 export async function apiGet(path, opts = {}) {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(`${API_BASE}${normalizePath(path)}`, {
     headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
     ...opts,
     method: 'GET',
@@ -11,7 +16,7 @@ export async function apiGet(path, opts = {}) {
 }
 
 export async function apiPost(path, body, opts = {}) {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(`${API_BASE}${normalizePath(path)}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
     body: JSON.stringify(body),
@@ -29,7 +34,7 @@ export async function apiPost(path, body, opts = {}) {
 }
 
 export async function apiPatch(path, body, opts = {}) {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(`${API_BASE}${normalizePath(path)}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
     body: JSON.stringify(body),
@@ -39,7 +44,7 @@ export async function apiPatch(path, body, opts = {}) {
 }
 
 export async function apiPut(path, body, opts = {}) {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(`${API_BASE}${normalizePath(path)}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
     body: JSON.stringify(body),
@@ -49,7 +54,7 @@ export async function apiPut(path, body, opts = {}) {
 }
 
 export async function apiDelete(path, opts = {}) {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(`${API_BASE}${normalizePath(path)}`, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
     ...opts,
@@ -65,7 +70,7 @@ export function withAuth(token) {
 export async function apiUpload(path, file, opts = {}) {
   const form = new FormData();
   form.append('file', file);
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(`${API_BASE}${normalizePath(path)}`, {
     method: 'POST',
     headers: { ...(opts.headers || {}) },
     body: form,

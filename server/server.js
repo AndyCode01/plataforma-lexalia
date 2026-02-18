@@ -19,6 +19,7 @@ import mercadoPagoRoutes from './routes/mercadopago.js';
 import uploadRoutes from './routes/upload.js';
 import adminRoutes from './routes/admin.js';
 import consultasRoutes from './routes/consultas.js';
+import { verificarSuscripcionesExpiradas } from './tasks/subscriptionChecker.js';
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -67,6 +68,12 @@ const connectWithRetry = async (maxRetries = 20, delayMs = 3000) => {
 const start = async () => {
   try {
     await connectWithRetry();
+    
+    // Iniciar verificación automática de suscripciones expiradas cada hora
+    setInterval(verificarSuscripcionesExpiradas, 60 * 60 * 1000); // Cada hora
+    // Ejecutar una verificación inicial al iniciar
+    await verificarSuscripcionesExpiradas();
+    console.log('⏰ Tarea automática de verificación de suscripciones activada');
     
     const NODE_ENV = process.env.NODE_ENV || 'development';
     const DOMAIN = process.env.DOMAIN || 'localhost';

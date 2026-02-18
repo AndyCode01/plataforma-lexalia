@@ -7,9 +7,12 @@ import Login from '../components/Login';
 import MiPerfil from '../components/MiPerfil';
 import PanelAdmin from '../components/PanelAdmin';
 import Consultas from '../components/Consultas';
+import DashboardSuscripcion from '../components/DashboardSuscripcion';
 import ProtectedRoute from '../components/ProtectedRoute';
 import AdminRoute from '../components/AdminRoute';
-import { RegistroExito, RegistroError, RegistroPending } from '../components/RegistroResultado';
+import RegistroExito from '../components/RegistroExito';
+import RegistroError from '../components/RegistroError';
+import RegistroPending from '../components/RegistroPending';
 
 export const homeRoute = {
   path: '/',
@@ -38,6 +41,10 @@ export const protectedRoutes = [
   {
     path: '/mi-perfil',
     element: <ProtectedRoute><MiPerfil /></ProtectedRoute>,
+  },
+  {
+    path: '/suscripcion',
+    element: <ProtectedRoute><DashboardSuscripcion /></ProtectedRoute>,
   },
   {
     path: '/consultas',
