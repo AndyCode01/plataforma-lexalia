@@ -89,7 +89,7 @@ mkdir -p docker/nginx/www
 docker-compose -f docker-compose.prod.yml run --rm certbot certonly \
   --webroot \
   -w /var/www/certbot \
-  --email tu-email@example.com \
+  --email andres.gamer1998@gmail.com \
   -d andreitus.online \
   -d www.andreitus.online \
   --agree-tos \
