@@ -2,10 +2,13 @@ services:
   db:
     image: mysql:8.0
     command: --default-authentication-plugin=mysql_native_password
+    env_file:
+      - ./server/.env
     environment:
       MYSQL_DATABASE: ${DB_NAME:-lexalia}
-      MYSQL_ROOT_PASSWORD: ${DB_PASS:-}
-      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_USER: ${DB_USER:-lexalia}
+      MYSQL_PASSWORD: ${DB_PASS:-Lexalia2026*$}
+      MYSQL_ALLOW_EMPTY_PASSWORD: "no"
     volumes:
       - db_data:/var/lib/mysql
     networks:
@@ -16,12 +19,12 @@ services:
     env_file:
       - ./server/.env
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
       PORT: 3000
       DB_HOST: db
       DB_PORT: 3306
       # MERCADOPAGO_TOKEN se toma de server/.env
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5174}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
       BACKEND_URL: ${BACKEND_URL:-http://localhost:3000}
     ports:
       - "3000:3000"
@@ -31,27 +34,6 @@ services:
       - ./server/uploads:/app/uploads
     networks:
       - lexalia
-
-  nginx:
-    image: nginx:1.27-alpine
-    depends_on:
-      - api
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./docker/nginx/conf.d:/etc/nginx/conf.d
-      - ./docker/nginx/www:/var/www/certbot
-      - ./docker/nginx/ssl:/etc/letsencrypt
-    networks:
-      - lexalia
-
-  certbot:
-    image: certbot/certbot:v2.11.0
-    volumes:
-      - ./docker/nginx/ssl:/etc/letsencrypt
-      - ./docker/nginx/www:/var/www/certbot
-    entrypoint: /bin/sh -c "trap exit TERM; while :; do sleep 12h; certbot renew --webroot -w /var/www/certbot; done"
 
 volumes:
   db_data:
