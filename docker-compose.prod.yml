@@ -67,7 +67,7 @@ services:
     volumes:
       - ./docker/nginx/ssl:/etc/letsencrypt:rw
       - ./docker/nginx/www:/var/www/certbot:rw
-    entrypoint: /bin/sh -c "certbot renew --quiet --no-eff-email && exit 0"
+    entrypoint: /bin/sh -c "while :; do certbot renew --quiet --no-eff-email; sleep 86400; done"
     restart: unless-stopped
 
 volumes:
