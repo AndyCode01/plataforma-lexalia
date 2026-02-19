@@ -4,6 +4,8 @@ export const ALLOWED_ORIGINS = [
   'https://www.lexaliaabogados.com',
   'http://lexaliaabogados.com',
   'http://www.lexaliaabogados.com',
+  'https://andreitus.online',
+  'https://www.andreitus.online',
   'http://localhost:5173',     // Frontend local development
   'http://localhost:5174',     // Frontend local development (alternate port)
   'http://localhost:5175',     // Frontend local development (alternate port)
