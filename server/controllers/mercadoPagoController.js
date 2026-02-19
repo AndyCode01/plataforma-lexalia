@@ -2,6 +2,65 @@ import { Usuario } from '../models/Usuario.js';
 import { Plan } from '../models/Plan.js';
 import { Abogado } from '../models/Abogado.js';
 
+const aplicarEstadoPago = async (plan, status) => {
+  if (status === 'approved') {
+    plan.estado_pago = 'aprobado';
+    plan.estado = 'activo';
+    plan.fecha_fin = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    await plan.save();
+
+    const abogado = await Abogado.findByPk(plan.abogado_id);
+    if (!abogado) return;
+    const user = await Usuario.findByPk(abogado.usuario_id);
+    if (!user) return;
+    user.activo = true;
+    user.estado_pago = 'aprobado';
+    user.fecha_activacion = new Date();
+    user.fecha_expiracion = plan.fecha_fin;
+    user.plan = plan.tipo;
+    await user.save();
+    return;
+  }
+
+  if (status === 'rejected' || status === 'cancelled') {
+    plan.estado_pago = 'rechazado';
+    plan.estado = 'suspendido';
+    await plan.save();
+    const abogado = await Abogado.findByPk(plan.abogado_id);
+    if (!abogado) return;
+    const user = await Usuario.findByPk(abogado.usuario_id);
+    if (!user) return;
+    user.activo = false;
+    user.estado_pago = 'rechazado';
+    await user.save();
+  }
+};
+
+const syncPagoPendiente = async (user) => {
+  if (!user || user.estado_pago === 'aprobado') return;
+  const abogado = await Abogado.findOne({ where: { usuario_id: user.id } });
+  if (!abogado) return;
+  const plan = await Plan.findOne({
+    where: { abogado_id: abogado.id },
+    order: [['createdAt', 'DESC']],
+  });
+  if (!plan || plan.estado_pago !== 'pendiente' || !plan.referencia_pago) return;
+
+  const token = process.env.MERCADOPAGO_TOKEN;
+  if (!token) return;
+
+  const url = `https://api.mercadopago.com/v1/payments/search?external_reference=${encodeURIComponent(plan.referencia_pago)}`;
+  const resp = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!resp.ok) return;
+  const data = await resp.json().catch(() => ({}));
+  const payment = data?.results?.[0];
+  const status = payment?.status;
+  if (!status) return;
+  await aplicarEstadoPago(plan, status);
+};
+
 export const crearPreferencia = async (req, res) => {
   try {
     // Validación temprana de configuración
@@ -95,6 +154,8 @@ export const obtenerEstadoSuscripcion = async (req, res) => {
     const user = await Usuario.findByPk(usuarioId);
     
     if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
+
+    await syncPagoPendiente(user);
 
     const ahora = new Date();
     const diasRestantes = user.fecha_expiracion 
@@ -245,38 +306,7 @@ export const pagoWebhook = async (req, res) => {
     if (!external_reference) return res.sendStatus(200);
     const plan = await Plan.findOne({ where: { referencia_pago: external_reference } });
     if (!plan) return res.sendStatus(200);
-    if (status === 'approved') {
-      plan.estado_pago = 'aprobado';
-      plan.estado = 'activo';
-      plan.fecha_fin = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-      await plan.save();
-      // Activar usuario dueño del abogado
-      const abogado = await Abogado.findByPk(plan.abogado_id);
-      if (abogado) {
-        const user = await Usuario.findByPk(abogado.usuario_id);
-        if (user) {
-          user.activo = true;
-          user.estado_pago = 'aprobado';
-          user.fecha_activacion = new Date();
-          user.fecha_expiracion = plan.fecha_fin;
-          user.plan = plan.tipo;
-          await user.save();
-        }
-      }
-    } else if (status === 'rejected' || status === 'cancelled') {
-      plan.estado_pago = 'rechazado';
-      plan.estado = 'suspendido';
-      await plan.save();
-      const abogado = await Abogado.findByPk(plan.abogado_id);
-      if (abogado) {
-        const user = await Usuario.findByPk(abogado.usuario_id);
-        if (user) {
-          user.activo = false;
-          user.estado_pago = 'rechazado';
-          await user.save();
-        }
-      }
-    }
+    await aplicarEstadoPago(plan, status);
     return res.sendStatus(200);
   } catch (err) {
     console.error(err);

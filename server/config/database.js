@@ -29,6 +29,11 @@ export const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASS, {
   define: {
     freezeTableName: true,
     underscored: true,
+    charset: 'utf8mb4',
+    collate: 'utf8mb4_unicode_ci',
+  },
+  dialectOptions: {
+    charset: 'utf8mb4',
   },
   charset: 'utf8mb4',
 });
