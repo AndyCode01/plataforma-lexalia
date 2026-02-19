@@ -80,6 +80,9 @@ npm run build
 ```bash
 mkdir -p docker/nginx/ssl
 mkdir -p docker/nginx/www
+
+# IMPORTANTE: Copiar .env a la raíz para docker-compose
+cp server/.env .env
 ```
 
 ### 7. Iniciar SSL (Let's Encrypt)

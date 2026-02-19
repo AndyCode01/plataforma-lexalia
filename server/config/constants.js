@@ -6,6 +6,7 @@ export const ALLOWED_ORIGINS = [
   'http://www.lexaliaabogados.com',
   'http://localhost:5173',     // Frontend local development
   'http://localhost:5174',     // Frontend local development (alternate port)
+  'http://localhost:5175',     // Frontend local development (alternate port)
   'http://localhost:3000',     // API local development
   'http://localhost:4000',     // API local (alternative port)
 ];

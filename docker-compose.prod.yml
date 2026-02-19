@@ -5,8 +5,10 @@ services:
     env_file:
       - ./server/.env.production
     environment:
-      MYSQL_DATABASE: ${DB_NAME:-lexalia}
-      MYSQL_ROOT_PASSWORD: ${DB_PASS}
+      MYSQL_DATABASE: lexalia
+      MYSQL_USER: ${DB_USER:-lexalia}
+      MYSQL_PASSWORD: ${DB_PASS:-Lexalia2026*$}
+      MYSQL_ROOT_PASSWORD: ${DB_PASS:-Lexalia2026*$}
       MYSQL_ALLOW_EMPTY_PASSWORD: "no"
     volumes:
       - db_data:/var/lib/mysql
