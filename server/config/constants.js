@@ -1,27 +1,31 @@
+// server/config/constants.js
+
+const normalizeOrigin = (o = '') => o.replace(/\/$/, '').toLowerCase();
+
 // CORS Configuration
 export const ALLOWED_ORIGINS = [
   'https://lexaliaabogados.com',
   'https://www.lexaliaabogados.com',
-  'http://lexaliaabogados.com',
-  'http://www.lexaliaabogados.com',
   'https://andreitus.online',
   'https://www.andreitus.online',
-  'http://localhost:5173',     // Frontend local development
-  'http://localhost:5174',     // Frontend local development (alternate port)
-  'http://localhost:5175',     // Frontend local development (alternate port)
-  'http://localhost:3000',     // API local development
-  'http://localhost:4000',     // API local (alternative port)
-];
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175',
+  'http://localhost:3000',
+  'http://localhost:4000',
+].map(normalizeOrigin);
 
 export const CORS_CONFIG = {
-  origin: function (origin, callback) {
-    // Allow requests without origin (like Postman) or from allowed origins
-    if (!origin || ALLOWED_ORIGINS.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.warn(`❌ CORS blocked request from: ${origin}`);
-      callback(new Error('No permitido por CORS'));
+  origin(origin, callback) {
+    if (!origin) return callback(null, true); // Postman/curl
+    const normalized = normalizeOrigin(origin);
+
+    if (ALLOWED_ORIGINS.includes(normalized)) {
+      return callback(null, true);
     }
+
+    console.warn(`CORS blocked request from: ${origin}`);
+    return callback(new Error('No permitido por CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
