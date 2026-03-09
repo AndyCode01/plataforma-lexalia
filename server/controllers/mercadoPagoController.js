@@ -2,11 +2,37 @@ import { Usuario } from '../models/Usuario.js';
 import { Plan } from '../models/Plan.js';
 import { Abogado } from '../models/Abogado.js';
 
+const normalizeBaseUrl = (url = '') => url.replace(/\/+$/, '');
+
+const buildWebhookUrl = (backendUrl = '') => {
+  const base = normalizeBaseUrl(backendUrl);
+  if (!base) return null;
+  if (base.endsWith('/api')) return `${base}/mercadopago/webhook`;
+  return `${base}/api/mercadopago/webhook`;
+};
+
+const resolveCheckoutMode = () => {
+  const mode = (process.env.MP_CHECKOUT_MODE || '').trim().toLowerCase();
+  if (mode === 'sandbox' || mode === 'production') return mode;
+  // Default estable: usar checkout normal (init_point)
+  return 'production';
+};
+
+const pickCheckoutUrl = (pref) => {
+  const mode = resolveCheckoutMode();
+  if (mode === 'sandbox') return pref.sandbox_init_point || pref.init_point;
+  return pref.init_point || pref.sandbox_init_point;
+};
+
 const aplicarEstadoPago = async (plan, status) => {
   if (status === 'approved') {
     plan.estado_pago = 'aprobado';
     plan.estado = 'activo';
-    plan.fecha_fin = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    // Calcular fecha_fin: mismo día del mes siguiente (estándar Netflix/Spotify)
+    const fechaInicio = plan.fecha_inicio || new Date();
+    const fechaFin = new Date(fechaInicio);
+    fechaFin.setMonth(fechaFin.getMonth() + 1); // +1 mes calendario
+    plan.fecha_fin = fechaFin;
     await plan.save();
 
     const abogado = await Abogado.findByPk(plan.abogado_id);
@@ -15,7 +41,10 @@ const aplicarEstadoPago = async (plan, status) => {
     if (!user) return;
     user.activo = true;
     user.estado_pago = 'aprobado';
-    user.fecha_activacion = new Date();
+    // Solo establecer fecha_activacion si no existe
+    if (!user.fecha_activacion) {
+      user.fecha_activacion = fechaInicio;
+    }
     user.fecha_expiracion = plan.fecha_fin;
     user.plan = plan.tipo;
     await user.save();
@@ -94,6 +123,8 @@ export const crearPreferencia = async (req, res) => {
       fecha_fin: null 
     });
 
+    const webhookUrl = buildWebhookUrl(process.env.BACKEND_URL);
+
     // Usar fetch directo en lugar de SDK (SDK v2.9.0 tiene problemas con PolicyAgent)
     const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
@@ -105,18 +136,21 @@ export const crearPreferencia = async (req, res) => {
         items: [
           {
             title: 'Membresía Premium Lexalia',
+            description: 'Suscripción mensual Premium para abogados',
             quantity: 1,
             unit_price: 100000,
             currency_id: 'COP',
           },
         ],
         external_reference: referencia,
+        statement_descriptor: 'LEXALIA',
+        ...(process.env.FRONTEND_URL?.startsWith('https://') ? { auto_return: 'approved' } : {}),
         back_urls: {
           success: `${process.env.FRONTEND_URL}/registro/exito`,
           failure: `${process.env.FRONTEND_URL}/registro/error`,
           pending: `${process.env.FRONTEND_URL}/registro/pending`,
         },
-        notification_url: `${process.env.BACKEND_URL}/api/mercadopago/webhook`,
+        ...(webhookUrl ? { notification_url: webhookUrl } : {}),
       }),
     });
 
@@ -133,9 +167,14 @@ export const crearPreferencia = async (req, res) => {
       });
     }
 
+    const mode = resolveCheckoutMode();
+    const checkoutUrl = pickCheckoutUrl(pref);
     console.log(`✅ Preferencia creada: ${pref.id}`);
     return res.json({ 
-      url: pref.init_point || pref.sandbox_init_point, 
+      url: checkoutUrl,
+      init_point: pref.init_point,
+      sandbox_init_point: pref.sandbox_init_point,
+      mode,
       referencia, 
       id: pref.id 
     });
@@ -159,7 +198,7 @@ export const obtenerEstadoSuscripcion = async (req, res) => {
 
     const ahora = new Date();
     const diasRestantes = user.fecha_expiracion 
-      ? Math.ceil((user.fecha_expiracion - ahora) / (1000 * 60 * 60 * 24))
+      ? Math.ceil((new Date(user.fecha_expiracion).getTime() - ahora.getTime()) / (1000 * 60 * 60 * 24))
       : null;
 
     const estado = {
@@ -211,6 +250,7 @@ export const renovarSuscripcion = async (req, res) => {
     });
 
     const token = process.env.MERCADOPAGO_TOKEN;
+    const webhookUrl = buildWebhookUrl(process.env.BACKEND_URL);
     const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
       headers: {
@@ -221,18 +261,22 @@ export const renovarSuscripcion = async (req, res) => {
         items: [
           {
             title: 'Renovación Membresía Lexalia',
+            description: 'Renovación suscripción mensual Premium',
             quantity: 1,
             unit_price: 100000,
             currency_id: 'COP',
           },
         ],
         external_reference: referencia,
+        statement_descriptor: 'LEXALIA',
+        ...(process.env.FRONTEND_URL?.startsWith('https://') ? { auto_return: 'approved' } : {}),
+
         back_urls: {
           success: `${process.env.FRONTEND_URL}/mi-perfil?renovacion=exitosa`,
           failure: `${process.env.FRONTEND_URL}/mi-perfil?renovacion=fallida`,
           pending: `${process.env.FRONTEND_URL}/mi-perfil?renovacion=pendiente`,
         },
-        notification_url: `${process.env.BACKEND_URL}/api/mercadopago/webhook`,
+        ...(webhookUrl ? { notification_url: webhookUrl } : {}),
       }),
     });
 
@@ -247,8 +291,13 @@ export const renovarSuscripcion = async (req, res) => {
     }
 
     console.log(`✅ Preferencia de renovación creada: ${pref.id}`);
+    const mode = resolveCheckoutMode();
+    const checkoutUrl = pickCheckoutUrl(pref);
     return res.json({ 
-      url: pref.init_point || pref.sandbox_init_point, 
+      url: checkoutUrl,
+      init_point: pref.init_point,
+      sandbox_init_point: pref.sandbox_init_point,
+      mode,
       referencia, 
       id: pref.id 
     });
@@ -258,6 +307,65 @@ export const renovarSuscripcion = async (req, res) => {
       message: 'Error en renovación',
       error: err.message 
     });
+  }
+};
+
+export const confirmarPagoDesdeRetorno = async (req, res) => {
+  try {
+    const { paymentId, externalReference } = req.body || {};
+    const token = process.env.MERCADOPAGO_TOKEN;
+    if (!token) {
+      return res.status(500).json({ message: 'MercadoPago no configurado' });
+    }
+
+    let reference = externalReference || null;
+    let status = null;
+
+    if (paymentId) {
+      const resp = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (resp.ok) {
+        const payment = await resp.json().catch(() => ({}));
+        reference = reference || payment?.external_reference || null;
+        status = payment?.status || null;
+      }
+    }
+
+    if (!reference) {
+      return res.status(400).json({ message: 'No se pudo determinar external_reference' });
+    }
+
+    const plan = await Plan.findOne({ where: { referencia_pago: reference } });
+    if (!plan) {
+      return res.status(404).json({ message: 'Plan no encontrado para la referencia' });
+    }
+
+    if (status) {
+      await aplicarEstadoPago(plan, status);
+      await plan.reload();
+    }
+
+    const abogado = plan.abogado_id ? await Abogado.findByPk(plan.abogado_id) : null;
+    const user = abogado ? await Usuario.findByPk(abogado.usuario_id) : null;
+
+    return res.json({
+      ok: true,
+      referencia: reference,
+      payment_status: status,
+      estado_pago_plan: plan.estado_pago,
+      usuario: user
+        ? {
+            id: user.id,
+            activo: user.activo,
+            estado_pago: user.estado_pago,
+            plan: user.plan,
+          }
+        : null,
+    });
+  } catch (err) {
+    console.error('Error confirmando pago desde retorno:', err);
+    return res.status(500).json({ message: 'Error confirmando pago desde retorno' });
   }
 };
 

@@ -1,0 +1,92 @@
+# Comandos Git para subir cambios al repositorio
+
+## Opción 1: Subir TODO (código + guías)
+
+```bash
+# Agregar todos los cambios
+git add .
+
+# Hacer commit
+git commit -m "feat: Corregir suscripciones a 30 días exactos + Scripts de deploy"
+
+# Subir a GitHub
+git push origin main
+```
+
+## Opción 2: Subir SOLO código (SIN guías de documentación)
+
+```bash
+# Agregar solo los archivos importantes
+
+# 1. Correcciones de código
+git add server/controllers/mercadoPagoController.js
+git add server/routes/mercadopago.js
+
+# 2. Scripts útiles
+git add init-ssl.sh
+git add check-subscriptions.sh
+git add pre-deploy-check.sh
+git add docker/nginx/conf.d/init-ssl.conf
+
+# 3. Configuraciones
+git add server/.env.production
+git add server/.env.example
+git add DEPLOY.md
+git add docker-compose.yml
+git add server/config/constants.js
+
+# 4. Frontend (si hay cambios que quieras)
+git add src/components/DashboardSuscripcion.jsx
+git add src/components/MiPerfil.jsx
+git add src/components/RegistroAbogado.jsx
+git add src/components/RegistroExito.jsx
+git add src/components/RegistroPending.jsx
+
+# 5. .gitignore actualizado
+git add .gitignore
+
+# Hacer commit
+git commit -m "feat: Corregir suscripciones a 30 días exactos + Scripts de deploy
+
+- Cambiar de setMonth() a 30 días exactos
+- Agregar init-ssl.sh para configuración SSL automática
+- Agregar check-subscriptions.sh para monitoreo
+- Actualizar DEPLOY.md con guía completa
+- Actualizar server/.env.production con mejores comentarios"
+
+# Subir a GitHub
+git push origin main
+```
+
+## Opción 3: Excluir guías permanentemente
+
+Si NO quieres subir las guías (CAMBIOS.md, QUICK-DEPLOY.md, etc.):
+
+```bash
+# Descomentar líneas en .gitignore (o editarlo manualmente)
+# Abre .gitignore y quita el # de estas líneas:
+# CAMBIOS.md
+# QUICK-DEPLOY.md
+# SSL-SETUP.md
+# SUSCRIPCIONES.md
+
+# Luego subir solo código (Opción 2)
+```
+
+---
+
+## ⚡ Recomendación Rápida
+
+**Sube TODO** (las guías pueden ser útiles para otros o para ti en el futuro):
+
+```bash
+git add .
+git commit -m "feat: Suscripciones corregidas + Scripts de deploy completos"
+git push origin main
+```
+
+Esto incluye:
+✅ Corrección de 30 días
+✅ Scripts útiles  
+✅ Guías de deploy
+✅ Todo actualizado

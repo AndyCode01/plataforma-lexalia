@@ -24,12 +24,13 @@ export const CORS_CONFIG = {
       return callback(null, true);
     }
 
-    console.warn(`CORS blocked request from: ${origin}`);
+    console.warn(` CORS blocked request from: ${origin}`);
     return callback(new Error('No permitido por CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 };
+
 
 // Server Configuration
 export const PORT = process.env.PORT || 4000;

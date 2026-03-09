@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { apiPost } from '../services/api';
 
 export default function RegistroExito() {
   const [searchParams] = useSearchParams();
@@ -8,20 +9,33 @@ export default function RegistroExito() {
   const [userData, setUserData] = useState(null);
 
   useEffect(() => {
-    const paymentId = searchParams.get('payment_id');
-    const status = searchParams.get('status');
-    const externalReference = searchParams.get('external_reference');
+    const verify = async () => {
+      const paymentId = searchParams.get('payment_id');
+      const status = searchParams.get('status');
+      const externalReference = searchParams.get('external_reference');
 
-    console.log('Pago completado:', { paymentId, status, externalReference });
+      console.log('Pago completado:', { paymentId, status, externalReference });
 
-    // Obtener datos del usuario desde localStorage
-    const user = localStorage.getItem('user');
-    if (user) {
-      setUserData(JSON.parse(user));
-    }
+      const user = localStorage.getItem('user');
+      if (user) {
+        setUserData(JSON.parse(user));
+      }
 
-    // Simular verificación
-    setTimeout(() => setLoading(false), 2000);
+      if (paymentId || externalReference) {
+        try {
+          await apiPost('/mercadopago/confirmar-retorno', {
+            paymentId,
+            externalReference,
+          });
+        } catch (err) {
+          console.error('No se pudo confirmar el retorno de pago:', err);
+        }
+      }
+
+      setLoading(false);
+    };
+
+    verify();
   }, [searchParams]);
 
   return (

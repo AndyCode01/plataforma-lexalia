@@ -47,6 +47,12 @@ uploads/
 ngrok.exe
 *.exe
 
+# Documentation (optional - uncomment to exclude from repo)
+# CAMBIOS.md
+# QUICK-DEPLOY.md
+# SSL-SETUP.md
+# SUSCRIPCIONES.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

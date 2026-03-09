@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { apiGet, apiPost } from '../services/api';
 
 export default function DashboardSuscripcion() {
   const [estado, setEstado] = useState(null);
@@ -14,13 +15,11 @@ export default function DashboardSuscripcion() {
   useEffect(() => {
     const fetchEstado = async () => {
       try {
-        const response = await fetch(`/api/mercadopago/estado/${usuarioId}`);
-        if (!response.ok) throw new Error('Usuario no encontrado');
-        const data = await response.json();
+        const data = await apiGet(`/mercadopago/estado/${usuarioId}`);
         setEstado(data);
         setError(null);
       } catch (err) {
-        setError(err.message);
+        setError(err.message || 'Usuario no encontrado');
       } finally {
         setLoading(false);
       }
@@ -31,12 +30,10 @@ export default function DashboardSuscripcion() {
 
   const handleRenovar = async () => {
     try {
-      const response = await fetch('/api/mercadopago/renovar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuarioId, plan: estado.plan }),
+      const data = await apiPost('/mercadopago/renovar', {
+        usuarioId,
+        plan: estado.plan
       });
-      const data = await response.json();
       if (data.url) {
         window.location.href = data.url;
       }

@@ -81,15 +81,24 @@ export default function RegistroAbogado() {
         return;
       }
       
-      // Si es abogado, crear preferencia de MercadoPago y abrir en nueva ventana
+      // Si es abogado, crear preferencia de MercadoPago y abrir checkout en ventana emergente
       const pagoRes = await apiPost('/mercadopago/preferencia', {
         usuarioId: res.userId,
         plan: form.plan,
       });
+      console.log('Respuesta de pago:', pagoRes);
+      
       if (pagoRes?.url) {
-        // Abrir Mercado Pago en nueva ventana
-        window.open(pagoRes.url, '_blank', 'width=800,height=800');
-        // Activar modo "Esperando pago"
+        console.log('Abriendo ventana de pago:', pagoRes.url);
+        const ventana = window.open(pagoRes.url, '_blank', 'width=900,height=900');
+
+        if (!ventana || ventana.closed || typeof ventana.closed === 'undefined') {
+          setError('Tu navegador bloqueó la ventana de pago. Permite ventanas emergentes y abre Mercado Pago manualmente.');
+          setPagoUrl(pagoRes.url);
+          setLoading(false);
+          return;
+        }
+
         setEsperandoPago(true);
         setLoading(false);
         return;
@@ -168,7 +177,23 @@ export default function RegistroAbogado() {
         {/* Formulario de Registro (solo si no está esperando pago) */}
         {!esperandoPago && !pagoAprobado && (
           <>
-            {error && <div className="mb-4 text-red-600 bg-red-100 border border-red-200 rounded px-3 py-2 animate-shake">{error}</div>}
+            {error && (
+              <div className="mb-4 text-red-600 bg-red-100 border border-red-200 rounded px-3 py-2 animate-shake">
+                {error}
+                {pagoUrl && pagoUrl !== 'USUARIO_ACTIVADO' && (
+                  <div className="mt-3">
+                    <a 
+                      href={pagoUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+                    >
+                      Abrir MercadoPago manualmente
+                    </a>
+                  </div>
+                )}
+              </div>
+            )}
             {errores.length > 0 && (
               <ul className="mb-4 text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 animate-shake">
                 {errores.map((msg, i) => <li key={i}>{msg}</li>)}
@@ -290,3 +315,4 @@ export default function RegistroAbogado() {
     </section>
   );
 }
+

@@ -1,8 +1,41 @@
+import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { apiPost } from '../services/api';
 
 export default function RegistroPending() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const paymentId = searchParams.get('payment_id');
+  const externalReference = searchParams.get('external_reference');
+
+  useEffect(() => {
+    if (!paymentId && !externalReference) return;
+
+    let active = true;
+    const interval = setInterval(async () => {
+      try {
+        const data = await apiPost('/mercadopago/confirmar-retorno', {
+          paymentId,
+          externalReference,
+        });
+
+        if (!active) return;
+        if (data?.usuario?.estado_pago === 'aprobado') {
+          navigate('/login', {
+            replace: true,
+            state: { message: 'Pago confirmado. Ya puedes iniciar sesión.' },
+          });
+        }
+      } catch (_) {
+        // Mantener polling silencioso mientras MP confirma
+      }
+    }, 5000);
+
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [paymentId, externalReference, navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50 flex items-center justify-center p-4">
@@ -17,14 +50,14 @@ export default function RegistroPending() {
           Tu pago está siendo procesado. Recibirás una notificación por correo electrónico
           cuando se confirme el estado de tu transacción.
         </p>
-        {searchParams.get('payment_id') && (
+        {paymentId && (
           <div className="bg-yellow-50 rounded-lg p-4 mb-6">
             <p className="text-sm text-gray-700">
-              <strong>ID de Pago:</strong> {searchParams.get('payment_id')}
+              <strong>ID de Pago:</strong> {paymentId}
             </p>
-            {searchParams.get('external_reference') && (
+            {externalReference && (
               <p className="text-sm text-gray-700 mt-1">
-                <strong>Referencia:</strong> {searchParams.get('external_reference')}
+                <strong>Referencia:</strong> {externalReference}
               </p>
             )}
           </div>

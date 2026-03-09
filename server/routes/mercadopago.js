@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { crearPreferencia, renovarSuscripcion, obtenerEstadoSuscripcion, pagoWebhook } from '../controllers/mercadoPagoController.js';
+import { crearPreferencia, renovarSuscripcion, obtenerEstadoSuscripcion, pagoWebhook, confirmarPagoDesdeRetorno } from '../controllers/mercadoPagoController.js';
 import { Usuario } from '../models/Usuario.js';
 import { Abogado } from '../models/Abogado.js';
 import { Plan } from '../models/Plan.js';
@@ -10,6 +10,7 @@ router.get('/estado/:usuarioId', obtenerEstadoSuscripcion);
 router.post('/preferencia', crearPreferencia);
 router.post('/renovar', renovarSuscripcion);
 router.post('/webhook', pagoWebhook);
+router.post('/confirmar-retorno', confirmarPagoDesdeRetorno);
 
 // Endpoint temporal para desarrollo: simula aprobación sin MercadoPago
 router.post('/simular-pago', async (req, res) => {
@@ -24,14 +25,18 @@ router.post('/simular-pago', async (req, res) => {
     
     // Crear plan aprobado directamente
     const referencia = 'DEV-' + Math.random().toString(36).slice(2, 12);
+    const fechaInicio = new Date();
+    const fechaFin = new Date(fechaInicio.getTime()); // Copiar timestamp exacto
+    fechaFin.setMonth(fechaFin.getMonth() + 1); // +1 mes calendario (estándar Netflix)
+    
     const nuevoPlan = await Plan.create({
       abogado_id: abogado.id,
       tipo: plan,
       estado: 'activo',
       referencia_pago: referencia,
       estado_pago: 'aprobado',
-      fecha_inicio: new Date(),
-      fecha_fin: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      fecha_inicio: fechaInicio,
+      fecha_fin: fechaFin,
     });
     
     // Activar usuario

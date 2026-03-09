@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { apiPatch, apiUpload } from '../services/api';
+import { apiPatch, apiUpload, apiGet, apiPost } from '../services/api';
 
 const MiPerfil = () => {
   const { user, token, updateUser, isAdmin } = useAuth();
@@ -44,8 +44,7 @@ const MiPerfil = () => {
     // Cargar estado de suscripción si es abogado
     if (user?.rol === 'abogado') {
       setLoadingSuscripcion(true);
-      fetch(`/api/mercadopago/estado/${user.id}`)
-        .then(res => res.json())
+      apiGet(`/mercadopago/estado/${user.id}`)
         .then(data => setEstadoSuscripcion(data))
         .catch(err => console.error('Error cargando suscripción:', err))
         .finally(() => setLoadingSuscripcion(false));
@@ -77,12 +76,10 @@ const MiPerfil = () => {
   const handleRenovar = async () => {
     setLoadingSuscripcion(true);
     try {
-      const response = await fetch('/api/mercadopago/renovar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuarioId: user.id, plan: estadoSuscripcion?.plan || 'basico' }),
+      const data = await apiPost('/mercadopago/renovar', {
+        usuarioId: user.id,
+        plan: estadoSuscripcion?.plan || 'basico'
       });
-      const data = await response.json();
       if (data.url) {
         window.location.href = data.url;
       }
