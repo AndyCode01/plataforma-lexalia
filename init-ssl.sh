@@ -1,140 +1,102 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# ========================================
-# Script de inicialización SSL con Let's Encrypt
-# Para usar en VPS con Docker
-# ========================================
+set -euo pipefail
 
-set -e
-
-# Colores para output
-RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+RED='\033[0;31m'
+NC='\033[0m'
+
+COMPOSE_FILE="docker-compose.prod.yml"
+PROD_CONF="docker/nginx/conf.d/production.conf"
+PROD_CONF_BAK="docker/nginx/conf.d/production.conf.bak"
 
 echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}Inicialización SSL para Lexalia${NC}"
+echo -e "${GREEN}Inicializacion SSL (Let's Encrypt)${NC}"
 echo -e "${GREEN}========================================${NC}"
 
-# Verificar que estemos en el directorio correcto
-if [ ! -f "docker-compose.prod.yml" ]; then
-    echo -e "${RED}Error: docker-compose.prod.yml no encontrado${NC}"
-    echo -e "${RED}Ejecuta este script desde la raíz del proyecto${NC}"
-    exit 1
+if [[ ! -f "$COMPOSE_FILE" ]]; then
+  echo -e "${RED}No existe $COMPOSE_FILE${NC}"
+  exit 1
 fi
 
-# Leer el dominio del archivo .env
-if [ -f "server/.env" ]; then
-    DOMAIN=$(grep "^DOMAIN=" server/.env | cut -d '=' -f2)
-    EMAIL=$(grep "^EMAIL=" server/.env | cut -d '=' -f2 || echo "")
+if [[ ! -f "$PROD_CONF" ]]; then
+  echo -e "${RED}No existe $PROD_CONF${NC}"
+  exit 1
+fi
+
+if [[ -f "server/.env" ]]; then
+  DOMAIN="$(grep '^DOMAIN=' server/.env | cut -d'=' -f2 || true)"
+elif [[ -f "server/.env.production" ]]; then
+  DOMAIN="$(grep '^DOMAIN=' server/.env.production | cut -d'=' -f2 || true)"
 else
-    echo -e "${RED}Error: server/.env no encontrado${NC}"
-    exit 1
+  DOMAIN=""
 fi
 
-# Validar que el dominio esté configurado
-if [ -z "$DOMAIN" ] || [ "$DOMAIN" = "localhost" ] || [ "$DOMAIN" = "andreitus.online" ]; then
-    echo -e "${RED}Error: Debes configurar el DOMAIN en server/.env${NC}"
-    echo -e "${YELLOW}Abre server/.env y cambia DOMAIN a tu dominio real${NC}"
-    exit 1
+if [[ -z "${DOMAIN}" || "${DOMAIN}" == "localhost" ]]; then
+  echo -e "${RED}DOMAIN no valido. Configura server/.env con el dominio real.${NC}"
+  exit 1
 fi
 
-# Solicitar email si no está configurado
-if [ -z "$EMAIL" ]; then
-    echo -e "${YELLOW}Ingresa tu email para certificados SSL:${NC}"
-    read -p "Email: " EMAIL
+read -r -p "Email para Let's Encrypt: " EMAIL
+if [[ -z "${EMAIL}" ]]; then
+  echo -e "${RED}El email es obligatorio.${NC}"
+  exit 1
 fi
 
-echo ""
-echo -e "${GREEN}📋 Configuración:${NC}"
-echo -e "   Dominio: ${GREEN}${DOMAIN}${NC}"
-echo -e "   Email: ${GREEN}${EMAIL}${NC}"
-echo ""
+echo -e "${YELLOW}Dominio:${NC} ${DOMAIN}"
+echo -e "${YELLOW}Email:${NC} ${EMAIL}"
 
-# Confirmar
-read -p "¿Continuar con esta configuración? (y/n) " -n 1 -r
-echo ""
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo -e "${YELLOW}Cancelado${NC}"
-    exit 0
-fi
+mkdir -p docker/nginx/ssl docker/nginx/www/.well-known/acme-challenge
 
-echo ""
-echo -e "${GREEN}🚀 Paso 1: Crear directorios necesarios${NC}"
-mkdir -p docker/nginx/ssl
-mkdir -p docker/nginx/www
-echo -e "${GREEN}   ✓ Directorios creados${NC}"
+cp "$PROD_CONF" "$PROD_CONF_BAK"
 
-echo ""
-echo -e "${GREEN}🚀 Paso 2: Iniciar nginx temporal para validación HTTP${NC}"
-# Crear configuración temporal de nginx solo para HTTP (sin SSL)
-cat > docker/nginx/conf.d/temp-http.conf << EOF
+cat > "$PROD_CONF" <<EOF
 server {
     listen 80;
     server_name ${DOMAIN} www.${DOMAIN};
-    
+
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
     }
-    
+
     location / {
-        return 200 'Validación SSL en progreso...';
+        return 200 "acme ok";
         add_header Content-Type text/plain;
     }
 }
 EOF
 
-# Iniciar solo nginx y certbot temporalmente
-docker-compose -f docker-compose.prod.yml up -d nginx
-sleep 5
-echo -e "${GREEN}   ✓ Nginx iniciado${NC}"
+echo "acme-ok" > docker/nginx/www/.well-known/acme-challenge/ping.txt
 
-echo ""
-echo -e "${GREEN}🚀 Paso 3: Obtener certificado SSL${NC}"
-echo -e "${YELLOW}   Esto puede tardar 1-2 minutos...${NC}"
+echo -e "${GREEN}Levantando nginx temporal en HTTP...${NC}"
+docker-compose -f "$COMPOSE_FILE" down --remove-orphans || true
+docker-compose -f "$COMPOSE_FILE" up -d db api nginx
+sleep 3
 
-# Obtener certificado
-docker-compose -f docker-compose.prod.yml run --rm certbot certonly \
-  --webroot \
-  -w /var/www/certbot \
+echo -e "${GREEN}Verificando challenge HTTP...${NC}"
+curl -4fsS "http://${DOMAIN}/.well-known/acme-challenge/ping.txt" >/dev/null
+curl -4fsS "http://www.${DOMAIN}/.well-known/acme-challenge/ping.txt" >/dev/null
+echo -e "${GREEN}Challenge HTTP accesible para ambos dominios.${NC}"
+
+echo -e "${GREEN}Solicitando certificado...${NC}"
+docker-compose -f "$COMPOSE_FILE" run --rm --entrypoint certbot certbot \
+  certonly --webroot -w /var/www/certbot \
   --email "${EMAIL}" \
-  -d "${DOMAIN}" \
-  -d "www.${DOMAIN}" \
-  --agree-tos \
-  --non-interactive \
-  --force-renewal
+  -d "${DOMAIN}" -d "www.${DOMAIN}" \
+  --agree-tos --non-interactive
 
-if [ $? -eq 0 ]; then
-    echo -e "${GREEN}   ✓ Certificado SSL obtenido exitosamente${NC}"
-else
-    echo -e "${RED}   ✗ Error obteniendo certificado SSL${NC}"
-    echo -e "${YELLOW}   Verifica que:${NC}"
-    echo -e "${YELLOW}   1. El dominio ${DOMAIN} apunte a este servidor${NC}"
-    echo -e "${YELLOW}   2. Los puertos 80 y 443 estén abiertos${NC}"
-    echo -e "${YELLOW}   3. No haya otro servicio usando el puerto 80${NC}"
-    docker-compose -f docker-compose.prod.yml down
-    exit 1
+if [[ ! -f "docker/nginx/ssl/live/${DOMAIN}/fullchain.pem" ]]; then
+  echo -e "${RED}No se encontro el certificado en docker/nginx/ssl/live/${DOMAIN}${NC}"
+  mv "$PROD_CONF_BAK" "$PROD_CONF"
+  exit 1
 fi
 
-echo ""
-echo -e "${GREEN}🚀 Paso 4: Restaurar configuración nginx de producción${NC}"
-# Eliminar configuración temporal
-rm docker/nginx/conf.d/temp-http.conf
+mv "$PROD_CONF_BAK" "$PROD_CONF"
 
-# Reiniciar todos los servicios con la configuración completa
-docker-compose -f docker-compose.prod.yml down
-sleep 2
-docker-compose -f docker-compose.prod.yml up -d
+echo -e "${GREEN}Levantando stack final con HTTPS...${NC}"
+docker-compose -f "$COMPOSE_FILE" down
+docker-compose -f "$COMPOSE_FILE" up -d db api nginx
 
-echo ""
-echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}✅ SSL configurado exitosamente${NC}"
-echo -e "${GREEN}========================================${NC}"
-echo ""
-echo -e "${GREEN}Tu sitio está ahora disponible en:${NC}"
-echo -e "   ${GREEN}https://${DOMAIN}${NC}"
-echo -e "   ${GREEN}https://www.${DOMAIN}${NC}"
-echo ""
-echo -e "${YELLOW}Nota: El certificado se renovará automáticamente cada 60 días${NC}"
-echo ""
+echo -e "${GREEN}SSL listo.${NC}"
+echo -e "${GREEN}Prueba:${NC} curl -vk https://${DOMAIN}/api/health"
