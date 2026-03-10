@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { normalizeImageUrl } from '../utils/imageUrl';
 
 const PerfilAbogado = ({ abogado, onClose }) => {
   const [mostrarContacto, setMostrarContacto] = useState(false);
@@ -19,15 +20,6 @@ const PerfilAbogado = ({ abogado, onClose }) => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const normalizeImageUrl = (url) => {
-    if (!url) return url;
-    if (typeof window === 'undefined') return url;
-    if (url.startsWith('http://localhost:4000')) {
-      return url.replace('http://localhost:4000', window.location.origin);
-    }
-    return url;
   };
 
   return (

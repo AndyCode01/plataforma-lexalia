@@ -1,11 +1,4 @@
-const normalizeImageUrl = (url) => {
-  if (!url) return url;
-  if (typeof window === 'undefined') return url;
-  if (url.startsWith('http://localhost:4000')) {
-    return url.replace('http://localhost:4000', window.location.origin);
-  }
-  return url;
-};
+import { normalizeImageUrl } from '../utils/imageUrl';
 
 const AbogadoCard = ({ abogado, onClick }) => {
   const imgSrc =
