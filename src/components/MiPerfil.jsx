@@ -142,6 +142,16 @@ const MiPerfil = () => {
   };
 
   if (!user) return null;
+  if (user.rol === 'abogado' && !user.perfil) {
+    return (
+      <section className="py-12 bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-gray-600">Cargando perfil profesional...</p>
+        </div>
+      </section>
+    );
+  }
 
   const isUsuario = user.rol === 'usuario';
   const isAbogado = user.rol === 'abogado';

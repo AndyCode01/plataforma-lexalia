@@ -10,6 +10,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (token) {
+      setLoading(true);
       // Cargar datos del usuario al iniciar
       apiGet('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } })
         .then(data => {
@@ -27,11 +28,16 @@ export function AuthProvider({ children }) {
   }, [token]);
 
   const login = async (email, password) => {
+    setLoading(true);
     const data = await apiPost('/api/auth/login', { email, password });
-    setToken(data.token);
-    setUser(data.user);
     localStorage.setItem('token', data.token);
-    return data;
+    setToken(data.token);
+    const fullUser = await apiGet('/api/auth/me', {
+      headers: { Authorization: `Bearer ${data.token}` }
+    });
+    setUser(fullUser);
+    setLoading(false);
+    return { ...data, user: fullUser };
   };
 
   const logout = () => {
