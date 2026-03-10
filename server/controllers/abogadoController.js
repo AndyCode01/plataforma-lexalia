@@ -2,6 +2,14 @@ import { Op, col, where as sqWhere } from 'sequelize';
 import { Abogado } from '../models/Abogado.js';
 import { Usuario } from '../models/Usuario.js';
 
+const normalizeStoredFotoUrl = (value) => {
+  if (!value) return value;
+  if (/^https?:\/\//i.test(value)) return value;
+  if (value.startsWith('/uploads/')) return value;
+  if (value.startsWith('uploads/')) return `/${value}`;
+  return `/uploads/${value.replace(/^\/+/, '')}`;
+};
+
 export const listar = async (req, res) => {
   try {
     const { ciudad, especialidad, q } = req.query;
@@ -44,7 +52,8 @@ export const listar = async (req, res) => {
       casosGanados: r.casos_ganados,
       telefono: r.telefono,
       email: r.email_publico,
-      foto: r.foto_url,
+      foto: normalizeStoredFotoUrl(r.foto_url),
+      foto_url: normalizeStoredFotoUrl(r.foto_url),
       descripcion: r.descripcion,
       idiomas: r.idiomas?.split(',').filter(Boolean) || [],
       educacion: r.educacion
@@ -86,7 +95,8 @@ export const obtener = async (req, res) => {
       casosGanados: r.casos_ganados,
       telefono: r.telefono,
       email: r.email_publico,
-      foto: r.foto_url,
+      foto: normalizeStoredFotoUrl(r.foto_url),
+      foto_url: normalizeStoredFotoUrl(r.foto_url),
       descripcion: r.descripcion,
       idiomas: r.idiomas?.split(',').filter(Boolean) || [],
       educacion: r.educacion
