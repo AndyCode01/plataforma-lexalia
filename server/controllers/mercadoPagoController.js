@@ -147,11 +147,26 @@ export const crearPreferencia = async (req, res) => {
         external_reference: referencia,
         statement_descriptor: 'LEXALIA',
         payment_methods: {
+          excluded_payment_methods: [
+            // Excluir todas las tarjetas
+            { id: 'visa' },
+            { id: 'master' },
+            { id: 'amex' },
+            { id: 'naranja' },
+            { id: 'maestro' },
+            { id: 'cabal' },
+            { id: 'diners' },
+            { id: 'codensa' },
+            // Excluir pagos en efectivo
+            { id: 'efecty' },
+            { id: 'baloto' }
+          ],
           excluded_payment_types: [
-            { id: 'credit_card' },      // Excluir tarjetas de crédito
-            { id: 'debit_card' },       // Excluir tarjetas de débito
-            { id: 'ticket' },           // Excluir Efecty, pagos en efectivo
-            { id: 'atm' }               // Excluir cajeros
+            { id: 'ticket' },
+            { id: 'atm' },
+            { id: 'debit_card' },
+            { id: 'credit_card' },
+            { id: 'prepaid_card' }
           ],
           installments: 1,
           default_installments: 1
@@ -283,11 +298,26 @@ export const renovarSuscripcion = async (req, res) => {
         external_reference: referencia,
         statement_descriptor: 'LEXALIA',
         payment_methods: {
+          excluded_payment_methods: [
+            // Excluir todas las tarjetas
+            { id: 'visa' },
+            { id: 'master' },
+            { id: 'amex' },
+            { id: 'naranja' },
+            { id: 'maestro' },
+            { id: 'cabal' },
+            { id: 'diners' },
+            { id: 'codensa' },
+            // Excluir pagos en efectivo
+            { id: 'efecty' },
+            { id: 'baloto' }
+          ],
           excluded_payment_types: [
-            { id: 'credit_card' },      // Excluir tarjetas de crédito
-            { id: 'debit_card' },       // Excluir tarjetas de débito
-            { id: 'ticket' },           // Excluir Efecty, pagos en efectivo
-            { id: 'atm' }               // Excluir cajeros
+            { id: 'ticket' },
+            { id: 'atm' },
+            { id: 'debit_card' },
+            { id: 'credit_card' },
+            { id: 'prepaid_card' }
           ],
           installments: 1,
           default_installments: 1
