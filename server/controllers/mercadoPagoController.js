@@ -147,22 +147,13 @@ export const crearPreferencia = async (req, res) => {
         external_reference: referencia,
         statement_descriptor: 'LEXALIA',
         payment_methods: {
-          excluded_payment_methods: [
-            "visa", "master", "amex", "naranja", "maestro", "cabal", "diners", 
-            "codensa", "efecty", "baloto", "account_money", "bancolombia_transfer",
-            "bancolombia_collect"
-          ],
           excluded_payment_types: [
             { id: "ticket" },
             { id: "atm" },
             { id: "debit_card" },
             { id: "credit_card" },
-            { id: "prepaid_card" },
-            { id: "digital_wallet" },
-            { id: "digital_currency" }
-          ],
-          installments: 1,
-          default_installments: 1
+            { id: "prepaid_card" }
+          ]
         },
         ...(process.env.FRONTEND_URL?.startsWith('https://') ? { auto_return: 'approved' } : {}),
         back_urls: {
@@ -291,22 +282,13 @@ export const renovarSuscripcion = async (req, res) => {
         external_reference: referencia,
         statement_descriptor: 'LEXALIA',
         payment_methods: {
-          excluded_payment_methods: [
-            "visa", "master", "amex", "naranja", "maestro", "cabal", "diners", 
-            "codensa", "efecty", "baloto", "account_money", "bancolombia_transfer",
-            "bancolombia_collect"
-          ],
           excluded_payment_types: [
             { id: "ticket" },
             { id: "atm" },
             { id: "debit_card" },
             { id: "credit_card" },
-            { id: "prepaid_card" },
-            { id: "digital_wallet" },
-            { id: "digital_currency" }
-          ],
-          installments: 1,
-          default_installments: 1
+            { id: "prepaid_card" }
+          ]
         },
         ...(process.env.FRONTEND_URL?.startsWith('https://') ? { auto_return: 'approved' } : {}),
 
