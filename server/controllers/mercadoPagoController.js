@@ -148,6 +148,11 @@ export const crearPreferencia = async (req, res) => {
         statement_descriptor: 'LEXALIA',
         payment_methods: {
           excluded_payment_methods: [
+            // Excluir cuenta MercadoPago
+            { id: 'account_money' },
+            // Excluir transferencia Bancolombia
+            { id: 'bancolombia_transfer' },
+            { id: 'bancolombia_collect' },
             // Excluir todas las tarjetas
             { id: 'visa' },
             { id: 'master' },
@@ -166,7 +171,9 @@ export const crearPreferencia = async (req, res) => {
             { id: 'atm' },
             { id: 'debit_card' },
             { id: 'credit_card' },
-            { id: 'prepaid_card' }
+            { id: 'prepaid_card' },
+            { id: 'digital_wallet' },
+            { id: 'digital_currency' }
           ],
           installments: 1,
           default_installments: 1
@@ -299,6 +306,11 @@ export const renovarSuscripcion = async (req, res) => {
         statement_descriptor: 'LEXALIA',
         payment_methods: {
           excluded_payment_methods: [
+            // Excluir cuenta MercadoPago
+            { id: 'account_money' },
+            // Excluir transferencia Bancolombia
+            { id: 'bancolombia_transfer' },
+            { id: 'bancolombia_collect' },
             // Excluir todas las tarjetas
             { id: 'visa' },
             { id: 'master' },
@@ -317,7 +329,9 @@ export const renovarSuscripcion = async (req, res) => {
             { id: 'atm' },
             { id: 'debit_card' },
             { id: 'credit_card' },
-            { id: 'prepaid_card' }
+            { id: 'prepaid_card' },
+            { id: 'digital_wallet' },
+            { id: 'digital_currency' }
           ],
           installments: 1,
           default_installments: 1
