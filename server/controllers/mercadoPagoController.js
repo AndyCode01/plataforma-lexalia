@@ -147,33 +147,8 @@ export const crearPreferencia = async (req, res) => {
         external_reference: referencia,
         statement_descriptor: 'LEXALIA',
         payment_methods: {
-          excluded_payment_methods: [
-            // Excluir cuenta MercadoPago
-            { id: 'account_money' },
-            // Excluir transferencia Bancolombia
-            { id: 'bancolombia_transfer' },
-            { id: 'bancolombia_collect' },
-            // Excluir todas las tarjetas
-            { id: 'visa' },
-            { id: 'master' },
-            { id: 'amex' },
-            { id: 'naranja' },
-            { id: 'maestro' },
-            { id: 'cabal' },
-            { id: 'diners' },
-            { id: 'codensa' },
-            // Excluir pagos en efectivo
-            { id: 'efecty' },
-            { id: 'baloto' }
-          ],
-          excluded_payment_types: [
-            { id: 'ticket' },
-            { id: 'atm' },
-            { id: 'debit_card' },
-            { id: 'credit_card' },
-            { id: 'prepaid_card' },
-            { id: 'digital_wallet' },
-            { id: 'digital_currency' }
+          included_payment_methods: [
+            { id: 'pse' }
           ],
           installments: 1,
           default_installments: 1
@@ -305,33 +280,8 @@ export const renovarSuscripcion = async (req, res) => {
         external_reference: referencia,
         statement_descriptor: 'LEXALIA',
         payment_methods: {
-          excluded_payment_methods: [
-            // Excluir cuenta MercadoPago
-            { id: 'account_money' },
-            // Excluir transferencia Bancolombia
-            { id: 'bancolombia_transfer' },
-            { id: 'bancolombia_collect' },
-            // Excluir todas las tarjetas
-            { id: 'visa' },
-            { id: 'master' },
-            { id: 'amex' },
-            { id: 'naranja' },
-            { id: 'maestro' },
-            { id: 'cabal' },
-            { id: 'diners' },
-            { id: 'codensa' },
-            // Excluir pagos en efectivo
-            { id: 'efecty' },
-            { id: 'baloto' }
-          ],
-          excluded_payment_types: [
-            { id: 'ticket' },
-            { id: 'atm' },
-            { id: 'debit_card' },
-            { id: 'credit_card' },
-            { id: 'prepaid_card' },
-            { id: 'digital_wallet' },
-            { id: 'digital_currency' }
+          included_payment_methods: [
+            { id: 'pse' }
           ],
           installments: 1,
           default_installments: 1
