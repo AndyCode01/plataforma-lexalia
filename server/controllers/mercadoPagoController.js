@@ -146,6 +146,16 @@ export const crearPreferencia = async (req, res) => {
         ],
         external_reference: referencia,
         statement_descriptor: 'LEXALIA',
+        payment_methods: {
+          excluded_payment_types: [
+            { id: 'credit_card' },      // Excluir tarjetas de crédito
+            { id: 'debit_card' },       // Excluir tarjetas de débito
+            { id: 'ticket' },           // Excluir Efecty, pagos en efectivo
+            { id: 'atm' }               // Excluir cajeros
+          ],
+          installments: 1,
+          default_installments: 1
+        },
         ...(process.env.FRONTEND_URL?.startsWith('https://') ? { auto_return: 'approved' } : {}),
         back_urls: {
           success: `${process.env.FRONTEND_URL}/registro/exito`,
@@ -272,6 +282,16 @@ export const renovarSuscripcion = async (req, res) => {
         ],
         external_reference: referencia,
         statement_descriptor: 'LEXALIA',
+        payment_methods: {
+          excluded_payment_types: [
+            { id: 'credit_card' },      // Excluir tarjetas de crédito
+            { id: 'debit_card' },       // Excluir tarjetas de débito
+            { id: 'ticket' },           // Excluir Efecty, pagos en efectivo
+            { id: 'atm' }               // Excluir cajeros
+          ],
+          installments: 1,
+          default_installments: 1
+        },
         ...(process.env.FRONTEND_URL?.startsWith('https://') ? { auto_return: 'approved' } : {}),
 
         back_urls: {
