@@ -126,6 +126,8 @@ export const crearPreferencia = async (req, res) => {
     const webhookUrl = buildWebhookUrl(process.env.BACKEND_URL);
 
     // Usar fetch directo en lugar de SDK (SDK v2.9.0 tiene problemas con PolicyAgent)
+    const subscriptionPrice = parseFloat(process.env.MP_SUBSCRIPTION_PRICE || '100000');
+
     const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
       headers: {
@@ -138,7 +140,7 @@ export const crearPreferencia = async (req, res) => {
             title: 'Membresía Premium Lexalia',
             description: 'Suscripción mensual Premium para abogados',
             quantity: 1,
-            unit_price: 100000,
+            unit_price: subscriptionPrice,
             currency_id: 'COP',
           },
         ],
@@ -250,6 +252,7 @@ export const renovarSuscripcion = async (req, res) => {
     });
 
     const token = process.env.MERCADOPAGO_TOKEN;
+    const subscriptionPrice = parseFloat(process.env.MP_SUBSCRIPTION_PRICE || '100000');
     const webhookUrl = buildWebhookUrl(process.env.BACKEND_URL);
     const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
@@ -263,7 +266,7 @@ export const renovarSuscripcion = async (req, res) => {
             title: 'Renovación Membresía Lexalia',
             description: 'Renovación suscripción mensual Premium',
             quantity: 1,
-            unit_price: 100000,
+            unit_price: subscriptionPrice,
             currency_id: 'COP',
           },
         ],
